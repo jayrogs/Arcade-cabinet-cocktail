@@ -5,7 +5,9 @@ this machine is on Jay's network or somewhere else entirely.
 """
 import os, socket, paramiko
 
-HOSTS = ["192.168.1.145", "192.168.1.175", "100.73.167.50", "arcade-cab"]
+# the home addresses first, then the cabinet by its own name on the home network (the
+# Wi-Fi address can change after a restart), then Tailscale
+HOSTS = ["192.168.1.145", "192.168.1.175", "picade.local", "100.73.167.50", "arcade-cab"]
 USER = "jayrogs"
 
 def reachable(host, port=22, timeout=4):
