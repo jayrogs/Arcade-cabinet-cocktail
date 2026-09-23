@@ -1,0 +1,27 @@
+-- What lives in each folder under roms/, which core plays it, and the colour of its box.
+-- Add a line here and drop files in the matching folder; the menu picks it up.
+return {
+  { dir = "arcade",    name = "ARCADE",           short = "ARCADE", core = "fbneo",             ext = "zip 7z",                  color = { 0.80, 0.11, 0.18 } },
+  { dir = "mame",      name = "MAME",             short = "MAME",   core = "mame2003_plus",     ext = "zip",                     color = { 0.62, 0.10, 0.34 } },
+  { dir = "nes",       name = "NINTENDO",         short = "NES",    core = "nestopia",          ext = "nes unf unif zip",        color = { 0.55, 0.13, 0.14 } },
+  { dir = "snes",      name = "SUPER NINTENDO",   short = "SNES",   core = "snes9x",            ext = "sfc smc fig swc zip",     color = { 0.35, 0.28, 0.60 } },
+  { dir = "genesis",   name = "MEGA DRIVE",       short = "MEGA",   core = "genesis_plus_gx",   ext = "md gen bin smd zip",      color = { 0.10, 0.28, 0.62 } },
+  { dir = "sms",       name = "MASTER SYSTEM",    short = "SMS",    core = "genesis_plus_gx",   ext = "sms zip",                 color = { 0.13, 0.36, 0.46 } },
+  { dir = "gg",        name = "GAME GEAR",        short = "GG",     core = "genesis_plus_gx",   ext = "gg zip",                  color = { 0.16, 0.42, 0.32 } },
+  { dir = "32x",       name = "32X",              short = "32X",    core = "picodrive",         ext = "32x bin zip",             color = { 0.20, 0.20, 0.55 } },
+  { dir = "gb",        name = "GAME BOY",         short = "GB",     core = "gambatte",          ext = "gb gbc dmg zip",          color = { 0.36, 0.42, 0.20 } },
+  { dir = "gba",       name = "GAME BOY ADVANCE", short = "GBA",    core = "mgba",              ext = "gba zip",                 color = { 0.32, 0.22, 0.52 } },
+  { dir = "psx",       name = "PLAYSTATION",      short = "PSX",    core = "pcsx_rearmed",      ext = "cue chd pbp m3u exe",     color = { 0.24, 0.24, 0.28 } },
+  { dir = "tg16",      name = "TURBOGRAFX",       short = "TG16",   core = "mednafen_pce_fast", ext = "pce cue chd zip",         color = { 0.72, 0.36, 0.06 } },
+  { dir = "atari2600", name = "ATARI 2600",       short = "2600",   core = "stella",            ext = "a26 bin zip",             color = { 0.55, 0.32, 0.10 } },
+  { dir = "atari7800", name = "ATARI 7800",       short = "7800",   core = "prosystem",         ext = "a78 bin zip",             color = { 0.45, 0.26, 0.10 } },
+  { dir = "lynx",      name = "ATARI LYNX",       short = "LYNX",   core = "handy",             ext = "lnx zip",                 color = { 0.50, 0.40, 0.08 } },
+  { dir = "c64",       name = "COMMODORE 64",     short = "C64",    core = "vice_x64",          ext = "d64 t64 prg crt tap zip", color = { 0.28, 0.34, 0.24 } },
+  { dir = "msx",       name = "MSX",              short = "MSX",    core = "bluemsx",           ext = "rom dsk cas mx1 mx2 zip", color = { 0.18, 0.34, 0.40 } },
+  { dir = "vb",        name = "VIRTUAL BOY",      short = "VB",     core = "mednafen_vb",       ext = "vb zip",                  color = { 0.58, 0.08, 0.10 } },
+  { dir = "wonderswan",name = "WONDERSWAN",       short = "WS",     core = "mednafen_wswan",    ext = "ws wsc zip",              color = { 0.30, 0.30, 0.36 } },
+  { dir = "o2em",      name = "ODYSSEY 2",        short = "O2",     core = "o2em",              ext = "bin zip",                 color = { 0.40, 0.18, 0.40 } },
+  { dir = "dreamcast", name = "DREAMCAST",        short = "DC",     core = "flycast",           ext = "gdi cdi chd m3u",         color = { 0.72, 0.42, 0.10 } },
+  { dir = "naomi",     name = "SEGA NAOMI",       short = "NAOMI",  core = "flycast",           ext = "zip",                     color = { 0.93, 0.55, 0.12 } },
+  { dir = "love",      name = "LOVE GAMES",       short = "LOVE",   core = nil,                 ext = "love",                    color = { 0.75, 0.20, 0.42 } },
+}

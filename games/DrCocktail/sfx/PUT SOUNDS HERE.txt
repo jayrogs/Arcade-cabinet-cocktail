@@ -1,0 +1,17 @@
+Drop a .wav, .ogg or .mp3 here named after the effect to replace the built-in one:
+
+  move     capsule steps sideways
+  rotate   capsule turns
+  lock     capsule lands
+  clear    four in a row, capsule pieces only
+  virus    four in a row that took out a virus
+  attack   combo sent garbage to the other player
+  garbage  garbage dropped into your bottle
+  dead     (retired: the game over music covers it)
+  won      (retired: the stage clear / vs win music covers it)
+  coin     credit added
+  start    game started
+  ready    player readied up
+  speedup  five-note chime when the drop speed steps up
+  cursor   menu cursor moved
+  ting     menu cursor moved or an option changed

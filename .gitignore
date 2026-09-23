@@ -1,0 +1,17 @@
+# game files: sourced by Jay, never uploaded
+roms/
+demos/
+*.zip
+*.7z
+*.chd
+# test captures and scratch, big and made again on demand
+fliptest/
+seats/
+simcheck/
+*.mkv
+*.mp4
+*.ogv
+# built packages: made from the source next to them
+*.love
+__pycache__/
+*.pyc

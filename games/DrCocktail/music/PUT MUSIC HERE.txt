@@ -1,0 +1,16 @@
+Music slots, matching the NES:
+
+  title       title screen and high score page
+  select      mode select screen
+  fever       in-game music when FEVER is chosen (also the attract demo)
+  chill       in-game music when CHILL is chosen
+  feverclear  stage clear jingle (Fever)
+  chillclear  stage clear jingle (Chill)
+  gameover    bottle overflowed, or the computer took the match
+  victory     a versus round won (match still going)
+  matchwin    a human wins the versus match
+
+Drop .ogg, .mp3 or .wav files here. A file named exactly after a slot (fever.mp3) wins.
+Otherwise the filename is matched on words: "fever", "chill", "title", "select"/"mode"/"menu",
+"fever clear", "chill clear", "game over", "vs"/"versus"/"match" for matchwin, "victory" or
+"round" for the round jingle. Anything not supplied keeps the built-in chiptune for that slot.

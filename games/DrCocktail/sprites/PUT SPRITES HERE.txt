@@ -1,0 +1,30 @@
+Drop PNG files here to replace the built-in pixel art. A file twice as wide as it is
+tall is read as two animation frames side by side.
+
+  virus_red.png, virus_blue.png, virus_yellow.png   viruses in the bottle, 8x8 per frame
+  lens_red.png,  lens_blue.png,  lens_yellow.png    the big lens viruses, about 24x24
+  doctor.png                                        the doctor, 16x16
+
+Transparent background. Anything not supplied keeps the built-in drawing.
+  logo.png                                          title capsule, 224x80 (logo_half.png: 112x40 for narrow seats)
+  title_doctor.png, title_virus.png                 menu pill icons, frames side by side
+  half_red.png, half_yellow.png, half_blue.png     capsule halves, 48x8: top, bottom, left, right, single, cleared ring
+
+
+font.png        the typeface: 8x8 cells, magenta separator columns, order
+                ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,-:<>!?/'#@
+logo_small.png  the small logo on the one-player screen
+
+The rest of the NES artwork, all optional and all falling back to the drawn version:
+bottle_game.png / bottle_solo.png  the glass (80x176, the playing area starts 8 in and 40 down)
+lens.png, doctor_box.png           the magnifier and the doctor's box on the one-player screen
+clipboard.png, clipboard_tall.png  the score and level boards
+card_stageclear.png / card_gameover.png   the end cards inside the bottle
+tally.png + crowns.png             the win board (three rows of two) and its crown tiles
+panel.png, virus_panel.png, virus_label.png   the panels between two upright bottles
+options_panel.png                  the mode select panel (used when the screen is wide enough)
+level_bar.png, level_box.png       the virus level slider and its number box
+mark_down.png / mark_up.png        the player markers on the slider
+mark_down_wide.png / mark_up_wide.png   the wider markers over LOW / MED / HI
+opt_fever.png, opt_chill.png, opt_off.png   the framed music words
+label_virus.png / label_virus_on.png  and the same for label_speed and label_music

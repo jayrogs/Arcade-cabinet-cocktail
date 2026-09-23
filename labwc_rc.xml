@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!-- Merged on top of the system labwc settings (labwc runs with -m). -->
+<labwc_config>
+  <windowRules>
+    <!-- Crossy Road: no title bar on the game's window -->
+    <windowRule title="CrossyRoad" serverDecoration="no" />
+    <!-- its loading screen stays above the game's window until the game is ready -->
+    <windowRule title="crossyload">
+      <action name="ToggleAlwaysOnTop" />
+    </windowRule>
+  </windowRules>
+</labwc_config>
