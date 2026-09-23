@@ -475,8 +475,9 @@ local function buildSystems()
     menu[#menu + 1] = {
       label = "MONKEY BALL", short = "MONKEY", tag = "SEGA ARCADE 2001",
       color = { 0.93, 0.55, 0.12 }, pic = "monkeyball",
-      run = "retroarch --appendconfig=" .. shellQuote(HOME .. "/.config/retroarch/flycast.cfg|" .. HOME .. "/.config/retroarch/monkeyball.cfg") ..
-            " -L " .. shellQuote(CORE_DIR .. "/flycast_libretro.so") .. " " .. shellQuote(monkey) .. " -f",
+      -- tools/monkeyball.sh: Flycast for OpenGL ES, threaded rendering, and a retry when a
+      -- start locks up
+      run = "sh " .. shellQuote(HOME .. "/monkeyball.sh"),
     }
   end
   local cockCount = 0
