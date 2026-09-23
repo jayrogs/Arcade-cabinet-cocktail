@@ -22,6 +22,5 @@ return {
   { dir = "wonderswan",name = "WONDERSWAN",       short = "WS",     core = "mednafen_wswan",    ext = "ws wsc zip",              color = { 0.30, 0.30, 0.36 } },
   { dir = "o2em",      name = "ODYSSEY 2",        short = "O2",     core = "o2em",              ext = "bin zip",                 color = { 0.40, 0.18, 0.40 } },
   { dir = "dreamcast", name = "DREAMCAST",        short = "DC",     core = "flycast",           ext = "gdi cdi chd m3u",         color = { 0.72, 0.42, 0.10 } },
-  { dir = "naomi",     name = "SEGA NAOMI",       short = "NAOMI",  core = "flycast",           ext = "zip",                     color = { 0.93, 0.55, 0.12 } },
   { dir = "love",      name = "LOVE GAMES",       short = "LOVE",   core = nil,                 ext = "love",                    color = { 0.75, 0.20, 0.42 } },
 }

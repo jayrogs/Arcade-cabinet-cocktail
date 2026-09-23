@@ -469,6 +469,16 @@ local function buildSystems()
       color = { 0.24, 0.62, 0.90 }, run = "sh " .. shellQuote(crossy), pic = "crossy",
     }
   end
+  -- Monkey Ball, Sega's 2001 arcade game, played by Flycast (the NAOMI board it ran on)
+  local monkey = ROOT .. "/naomi/monkeyba.zip"
+  if fileExists(monkey) then
+    menu[#menu + 1] = {
+      label = "MONKEY BALL", short = "MONKEY", tag = "SEGA ARCADE 2001",
+      color = { 0.93, 0.55, 0.12 }, pic = "monkeyball",
+      run = "retroarch --appendconfig=" .. shellQuote(HOME .. "/.config/retroarch/flycast.cfg") ..
+            " -L " .. shellQuote(CORE_DIR .. "/flycast_libretro.so") .. " " .. shellQuote(monkey) .. " -f",
+    }
+  end
   local cockCount = 0
   for _, sys in ipairs(SYSTEMS) do
     for _, game in ipairs(catalogue[sys.dir] or {}) do
