@@ -13,7 +13,9 @@ set -x
 # old copy carry on partway through the new one and start the game a second time.
 {
   export WINEPREFIX=$HOME/.wine-crossy
-  export WINEDEBUG=-all
+  # everything quiet except one line a second with the frame rate, so how smoothly it
+  # really ran can be read from the log afterwards (the phone feed is no measure of that)
+  export WINEDEBUG=-all,trace+fps
   export BOX86_NOBANNER=1
   export WINEDLLOVERRIDES="mscoree,mshtml="
   export XDG_RUNTIME_DIR=/run/user/1000
