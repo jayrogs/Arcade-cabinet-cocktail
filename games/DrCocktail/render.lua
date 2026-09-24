@@ -1384,17 +1384,37 @@ function R.drawSelect(region, sel, t)
   local top = tab and (py + 26) or (py + math.floor((ph - base * sy) / 2))
   local function Y(v) return top + math.floor(v * sy) end
   local versus = sel.mode == "versus"
-  local rows = { false, false, false }
+  local rows = { [0] = false, false, false, false }
   for p = 1, (versus and 2 or 1) do rows[sel.cursor[p]] = true end
   local hint = rows[ROW_LEVEL] and ROW_LEVEL or (rows[ROW_SPEED] and ROW_SPEED or ROW_MUSIC)
 
   local cpu = sel.cpu and sel.cpu[2]
-  local mode = cpu and "VS COMPUTER" or (versus and "2 PLAYER GAME" or "1 PLAYER GAME")
+  -- in a computer game the tab says how good the computer is, and it is a row of its own:
+  -- pink behind it while it is the one being changed, with arrows to say left/right works
+  local mode = cpu and ("CPU " .. string.upper(sel.cpuSkill or "normal")) or (versus and "2 PLAYER GAME" or "1 PLAYER GAME")
+  if cpu and R.font:getWidth(mode) > pw - 16 then mode = string.upper(sel.cpuSkill or "normal") end
+  local mw = R.font:getWidth(mode)
+  local mx, my
   if tab then
-    text(mode, px + 36 + math.floor((134 - R.font:getWidth(mode)) / 2), py + 6, PAL.white)
+    mx, my = px + 36 + math.floor((134 - mw) / 2), py + 6
   else
-    textCenter(mode, region, Y(5) - ry, PAL.white)
+    mx, my = rx + math.floor((rw - mw) / 2), Y(5)
   end
+  if cpu and rows[0] then
+    -- arrows either side when there is room; a narrow strip gets the pink bar alone, kept
+    -- inside the panel's frame
+    local arrows = mw + 24 <= pw - 10
+    local pad = arrows and 12 or 3
+    local bx0 = math.max(px + 4, mx - pad)
+    local bw = math.min(mw + pad * 2, px + pw - 4 - bx0)
+    g.setColor(PAL.hilite)
+    g.rectangle("fill", bx0, my - 3, bw, 13, 3, 3)
+    if arrows then
+      text("<", mx - 9, my, PAL.white)
+      text(">", mx + mw + 3, my, PAL.white)
+    end
+  end
+  text(mode, mx, my, (cpu and not rows[0]) and PAL.orange or PAL.white)
 
   -- virus level
   local barW = 84

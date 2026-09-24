@@ -1,12 +1,48 @@
--- ai.lua : a simple computer player used for the attract-mode demo.
+-- ai.lua : the computer player, used for VS COMPUTER and the attract-mode demo.
 -- For each new capsule it scores every (column, orientation) landing spot and then
 -- feeds the board left/right/rotate/down inputs to get there.
+--
+-- How good it is comes from its skill (the virus level and speed are player 1's either
+-- way, so a skill only changes the computer itself):
+--   easy        slow hands, often picks a poor spot, never hurries a capsule down
+--   normal      how the computer has always played
+--   hard        quick hands, and it plans for the next capsule as well as this one
+--   impossible  as fast as the controls allow, planning the same way
 local Board = require("board")
 local AI = {}
 AI.__index = AI
 
-function AI.new(board, rng)
-  return setmetatable({ board = board, rng = rng, target = nil, cooldown = 0 }, AI)
+AI.SKILLS = { "easy", "normal", "hard", "impossible" }
+local SKILL = {
+  --          frames between presses   extra noise in its judgement   chance of a blunder   hurries down   looks one capsule ahead
+  easy       = { rotate = 16, move = 13, noise = 60,  blunder = 0.25, drop = false, ahead = false },
+  normal     = { rotate = 6,  move = 5,  noise = 5,   blunder = 0,    drop = true,  ahead = false },
+  hard       = { rotate = 4,  move = 4,  noise = 0.5, blunder = 0,    drop = true,  ahead = true },
+  impossible = { rotate = 2,  move = 2,  noise = 0,   blunder = 0,    drop = true,  ahead = true },
+}
+
+function AI.new(board, rng, skill)
+  local s = SKILL[skill or "normal"] or SKILL.normal
+  return setmetatable({ board = board, rng = rng, target = nil, cooldown = 0, skill = s }, AI)
+end
+
+-- A board with a few extra cells laid on top, so a placement can be tried without
+-- touching the real one.
+local Trial = {}
+Trial.__index = Trial
+Trial.capsuleFits = Board.capsuleFits
+function Trial.new(base, cells)
+  local extra = {}
+  for _, cell in ipairs(cells) do extra[cell[1] + cell[2] * 100] = { color = cell[3], kind = "capsule" } end
+  return setmetatable({ base = base, extra = extra }, Trial)
+end
+function Trial:get(x, y)
+  return self.extra[x + y * 100] or self.base:get(x, y)
+end
+function Trial:free(x, y)
+  if x < 1 or x > Board.W or y > Board.H then return false end
+  if y < 1 then return true end
+  return self:get(x, y) == nil
 end
 
 -- Where would this capsule come to rest if dropped straight down from here?
@@ -53,30 +89,56 @@ local function scorePlacement(b, c)
     if below and below.color == col and below.kind == "virus" then score = score + 30 end
     score = score + y * 4                      -- lower is better
   end
-  -- discourage burying viruses under wrong colours
   return score
 end
 
-function AI:chooseTarget()
-  local b = self.board
-  local c = b.capsule
-  local best, bestScore = nil, -math.huge
+-- Every spot a capsule with colours a, b can come to rest on this board, with its score.
+local function landings(b, spawn, a, bcol)
+  local out = {}
   for o = 0, 3 do
     for x = 1, Board.W do
-      local t = { x = x, y = c.y, o = o, a = c.a, b = c.b }
+      local t = { x = x, y = spawn.y, o = o, a = a, b = bcol }
       if b:capsuleFits(t) then
         t.y = dropRow(b, t)
-        local s = scorePlacement(b, t) + self.rng:random() * 5
-        if s > bestScore then best, bestScore = { x = x, o = o }, s end
+        out[#out + 1] = { x = x, o = o, t = t, score = scorePlacement(b, t) }
       end
     end
+  end
+  return out
+end
+
+function AI:chooseTarget()
+  local b, s = self.board, self.skill
+  local c = b.capsule
+  local spots = landings(b, c, c.a, c.b)
+  if #spots == 0 then self.target = nil return end
+  if s.blunder > 0 and self.rng:random() < s.blunder then
+    local pick = spots[self.rng:random(#spots)]
+    self.target = { x = pick.x, o = pick.o }
+    return
+  end
+  local best, bestScore = nil, -math.huge
+  for _, spot in ipairs(spots) do
+    local score = spot.score
+    if s.ahead and b.nextPair and score > -1e8 then
+      -- lay this capsule down, then see how well the next one could go
+      local p, q = Board.capsuleCells(spot.t)
+      local after = Trial.new(b, { p, q })
+      local nextBest = -1e9
+      for _, n in ipairs(landings(after, c, b.nextPair[1], b.nextPair[2])) do
+        if n.score > nextBest then nextBest = n.score end
+      end
+      score = score + 0.6 * nextBest
+    end
+    score = score + self.rng:random() * s.noise
+    if score > bestScore then best, bestScore = { x = spot.x, o = spot.o }, score end
   end
   self.target = best
 end
 
 -- Returns an input table for this frame.
 function AI:input()
-  local b = self.board
+  local b, s = self.board, self.skill
   local inp = { left = false, right = false, down = false, rotCW = false, rotCCW = false }
   if b.state ~= "falling" or not b.capsule then
     self.target = nil
@@ -89,14 +151,14 @@ function AI:input()
   if self.cooldown > 0 then return inp end
   if c.o ~= t.o then
     inp.rotCW = true
-    self.cooldown = 6
+    self.cooldown = s.rotate
   elseif c.x < t.x then
     inp.right = true
-    self.cooldown = 5
+    self.cooldown = s.move
   elseif c.x > t.x then
     inp.left = true
-    self.cooldown = 5
-  else
+    self.cooldown = s.move
+  elseif s.drop then
     inp.down = true
   end
   return inp

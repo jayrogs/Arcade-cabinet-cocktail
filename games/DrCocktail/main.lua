@@ -69,6 +69,7 @@ local G = {
   mode = nil,
   active = { false, false },
   cpu = { false, false },
+  cpuSkill = "normal", -- easy | normal | hard | impossible, kept between games
   titleSel = 1,
   titlePage = 0,      -- 0 = menu, 1 = high scores
   pageTimer = 0,
@@ -264,7 +265,7 @@ local function startRound()
       if G.mode == "solo" then G.boards[p].score = G.carryScore end
       if G.cpu[p] then
         G.ai = G.ai or {}
-        G.ai[p] = AI.new(G.boards[p], rng)
+        G.ai[p] = AI.new(G.boards[p], rng, G.cpuSkill)
       end
     end
   end
@@ -382,15 +383,21 @@ local function tick(inp)
 
   elseif st == "setup" then
     -- NES mode select: up/down picks the row, left/right changes it, start begins.
-    -- A computer player takes player 1's level and speed.
+    -- A computer player takes player 1's level and speed; in a computer game there is one
+    -- more row above the rest (row 0, the panel's tab) that sets how good the computer is.
     for p = 1, 2 do
       if G.active[p] and not G.cpu[p] then
         local s, i, row = G.settings[p], inp[p], G.cursor[p]
-        if i.upP and row > 1 then G.cursor[p] = row - 1 playFrom("UI", MENU_SFX) end
+        local topRow = G.cpu[2] and 0 or 1
+        if i.upP and row > topRow then G.cursor[p] = row - 1 playFrom("UI", MENU_SFX) end
         if i.downP and row < 3 then G.cursor[p] = row + 1 playFrom("UI", MENU_SFX) end
         local d = (i.rightP and 1 or 0) - (i.leftP and 1 or 0)
         if d ~= 0 then
-          if row == 1 then s.level = math.max(0, math.min(20, s.level + d))
+          if row == 0 then
+            local k = 2
+            for n, name in ipairs(AI.SKILLS) do if name == G.cpuSkill then k = n end end
+            G.cpuSkill = AI.SKILLS[math.max(1, math.min(#AI.SKILLS, k + d))]
+          elseif row == 1 then s.level = math.max(0, math.min(20, s.level + d))
           elseif row == 2 then s.speed = SPEEDS[math.max(1, math.min(3, speedIndex(s.speed) + d))]
           else G.musicType = MUSIC_ORDER[math.max(1, math.min(3, musicIndex(G.musicType) + d))] end
           playFrom("UI", MENU_SFX)
@@ -557,7 +564,8 @@ local PAUSE_ITEMS = { "CONTINUE", "PLAY AGAIN", "MAIN MENU", "QUIT" }
 local function pauseItems() return PAUSE_ITEMS end
 
 local function selectData()
-  return { mode = G.mode, settings = G.settings, cursor = G.cursor, musicType = G.musicType, cpu = G.cpu }
+  return { mode = G.mode, settings = G.settings, cursor = G.cursor, musicType = G.musicType, cpu = G.cpu,
+           cpuSkill = G.cpuSkill }
 end
 
 -- The NES end-of-round look: bottle emptied, yellow card with the result, the doctor
@@ -1110,6 +1118,53 @@ local function selftest()
   check(G.boards[2].capsulesDropped > 3, "computer player actually plays (" .. G.boards[2].capsulesDropped .. " capsules)")
   goTitle()
 
+  -- 8d. the computer's skill: its own row above VIRUS LEVEL, only in a computer game
+  G.cpuSkill = "normal"
+  G.titleSel = 3
+  tick({ { start = true }, {} })
+  G.cursor = { 1, 1 }
+  tick({ { upP = true }, {} })
+  check(G.cursor[1] == 0, "up from VIRUS LEVEL reaches the computer's skill in a computer game")
+  tick({ { rightP = true }, {} }) tick({ { rightP = true }, {} }) tick({ { rightP = true }, {} })
+  check(G.cpuSkill == "impossible", "right goes normal -> hard -> impossible and stops there (" .. G.cpuSkill .. ")")
+  for _ = 1, 5 do tick({ { leftP = true }, {} }) end
+  check(G.cpuSkill == "easy", "left goes down to easy and stops there (" .. G.cpuSkill .. ")")
+  local lv = G.settings[1].level
+  tick({ { downP = true }, {} }) tick({ { rightP = true }, {} })
+  check(G.cursor[1] == 1 and G.settings[1].level == lv + 1, "down again is the virus level, unchanged by the skill")
+  G.cpuSkill = "impossible"
+  tick({ { start = true }, {} })
+  check(G.ai and G.ai[2] and G.ai[2].skill.ahead, "the computer gets the skill that was chosen")
+  goTitle()
+  G.titleSel = 2
+  tick({ { start = true }, {} })
+  G.cursor = { 1, 1 }
+  tick({ { upP = true }, { upP = true } })
+  check(G.cursor[1] == 1 and G.cursor[2] == 1, "no skill row in a two-player game")
+  goTitle()
+  G.cpuSkill = "normal"
+
+  -- 8e. the skills really differ: each plays the same bottle alone; count viruses cleared
+  local function clears(skill, seed)
+    local r = love.math.newRandomGenerator(seed)
+    local b = Board.new(12, "med", r)
+    local start = b.viruses or 0
+    local ai = AI.new(b, love.math.newRandomGenerator(seed + 1), skill)
+    for _ = 1, 60 * 90 do
+      b:tick(ai:input())
+      b:drainEvents() b:takeOutgoing()
+      if b.state == "won" or b.state == "dead" then break end
+    end
+    return (start - (b.viruses or 0)), b.state
+  end
+  local tot = {}
+  for _, sk in ipairs(AI.SKILLS) do
+    tot[sk] = 0
+    for seed = 1, 10 do tot[sk] = tot[sk] + clears(sk, seed * 7) end
+  end
+  check(tot.easy < tot.normal and tot.normal <= tot.hard and tot.hard <= tot.impossible,
+        ("viruses cleared in 90 s: easy %d, normal %d, hard %d, impossible %d"):format(tot.easy, tot.normal, tot.hard, tot.impossible))
+
   -- 9. all music slots load (external file or built-in) and every effect exists
   local mok, merr = pcall(music.load)
   check(mok, "music loads (" .. tostring(merr) .. ")")
@@ -1234,6 +1289,11 @@ function love.load(args)
     G.ai = { AI.new(G.boards[1], r), AI.new(G.boards[2], r) }
     for _ = 1, 500 do tick({ G.ai[1]:input(), G.ai[2]:input() }) if G.state ~= "play" then break end end
     G.state, G.pauseSel = "paused", 2
+  elseif shotMode == "cpuselect" then
+    G.settings = { { level = 5, speed = "low" }, { level = 5, speed = "med" } }
+    G.cpuSkill = "impossible"
+    beginGame(3)
+    G.cursor = { 0, 1 }
   elseif shotMode == "select" then
     G.settings = { { level = 5, speed = "low" }, { level = 5, speed = "med" } }
     beginGame(2)
