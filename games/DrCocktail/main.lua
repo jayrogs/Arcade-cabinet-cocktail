@@ -315,6 +315,11 @@ local function beginGame(choice)
   playFrom("UI", "start")
 end
 
+-- the pause menu (button 4); defined before tick, which is what reads it
+local PAUSE_ITEMS = { "CONTINUE", "PLAY AGAIN", "MAIN MENU", "QUIT" }
+
+local function pauseItems() return PAUSE_ITEMS end
+
 local function tick(inp)
   for p = 1, 2 do
     if inp[p].coin then
@@ -559,9 +564,6 @@ local function overlayFor(p, b)
 end
 
 -- What the pause panel offers. It sits on top of the game; the clock stops.
-local PAUSE_ITEMS = { "CONTINUE", "PLAY AGAIN", "MAIN MENU", "QUIT" }
-
-local function pauseItems() return PAUSE_ITEMS end
 
 local function selectData()
   return { mode = G.mode, settings = G.settings, cursor = G.cursor, musicType = G.musicType, cpu = G.cpu,
@@ -1116,6 +1118,22 @@ local function selftest()
   for _ = 1, 100 do tick({ {}, {} }) end
   for _ = 1, 1200 do tick({ {}, {} }) end
   check(G.boards[2].capsulesDropped > 3, "computer player actually plays (" .. G.boards[2].capsulesDropped .. " capsules)")
+  goTitle()
+
+  -- 8c2. pause (button 4) mid-game: the menu opens, moves, and continue goes back to play
+  G.titleSel = 2
+  tick({ { start = true }, {} })
+  tick({ { start = true }, {} })
+  for _ = 1, INTRO_FRAMES + 2 do tick({ {}, {} }) end
+  check(G.state == "play", "a two-player game reaches play")
+  tick({ { pause = true }, {} })
+  check(G.state == "paused", "button 4 pauses the game")
+  local okp, errp = pcall(tick, { {}, {} })
+  check(okp and G.state == "paused", "the paused screen runs without an error (" .. tostring(errp) .. ")")
+  tick({ { downP = true }, {} })
+  check(G.pauseSel == 2, "down moves in the pause menu")
+  tick({ { pause = true }, {} })
+  check(G.state == "play", "button 4 again goes back to the game")
   goTitle()
 
   -- 8d. the computer's skill: its own row above VIRUS LEVEL, only in a computer game
