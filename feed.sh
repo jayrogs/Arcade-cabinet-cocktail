@@ -39,8 +39,9 @@ fi
 
 # The sound rides along with the picture, in the same stream, so the two cannot drift
 # apart and there is nothing separate to start. It is what the cabinet itself is
-# playing, heard from the sound card's own output.
-SOUND=alsa_output.platform-fe00b840.mailbox.stereo-fallback.monitor
+# playing, heard from whichever output it is playing through: the Pi 4's headphone jack,
+# a USB sound card or HDMI all work without changing this.
+SOUND=@DEFAULT_MONITOR@
 
 # The picture goes into a pipe and is passed straight on, untouched. The SOUND is
 # picked up here rather than by the recorder: the recorder's own way of mixing the two

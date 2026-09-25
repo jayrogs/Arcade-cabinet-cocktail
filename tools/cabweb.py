@@ -381,14 +381,15 @@ threading.Thread(target=grabber, daemon=True).start()
 
 # --- the sound ---------------------------------------------------------------
 # Listens in on what the cabinet is playing and sends it out as a stream the page can
-# play. The source is the sound card's own monitor, so it hears the menu music and the
-# games exactly as the cabinet does.
-SINK = "alsa_output.platform-fe00b840.mailbox.stereo-fallback"
+# play. The source is the monitor of whichever output the cabinet plays through (headphone
+# jack, USB sound card or HDMI), so it hears the menu music and the games exactly as the
+# cabinet does.
+SOURCE = "@DEFAULT_MONITOR@"
 
 def audio_stream():
     return subprocess.Popen(
         ["ffmpeg", "-loglevel", "quiet",
-         "-f", "pulse", "-i", SINK + ".monitor",
+         "-f", "pulse", "-i", SOURCE,
          "-ac", "2", "-ar", "44100",
          "-c:a", "libmp3lame", "-b:a", "96k", "-f", "mp3", "-"],
         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=ENV)
