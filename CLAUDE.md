@@ -6,17 +6,26 @@ lives where on it. Read both first.
 
 ## Where things stand (Sept 2026)
 
-- **The Pi 4 is dead.** It was wired to 12V by accident, smoked, and now the supply just
-  flashes and clicks. Replacing it with a **Raspberry Pi 5**.
-- **The memory card probably survived.** Not checked yet. If it's fine it goes straight
-  into the new Pi.
-- **Backup:** `Documents\CabBackup` on Jay's PC, made the night before (after the Monkey
-  Ball, Crossy Road and Dr Mario skill work). Made by `tools/cab_backup.py`.
-- **Not yet on the cabinet:** the Dr Mario pause fix (commit b583362) and the sound
-  change below. Deploy both once the new Pi is up.
+- **Now running on a Raspberry Pi 5** (Sept 25). The Pi 4 died after being wired to 12V;
+  the memory card survived and went straight in. Checked after a full reboot: power
+  ~5.05V with no throttling, the 3H controls board, the USB-C sound adapter as the default
+  output, menu, phone page and video feed all fine. Idles ~55°C, 63°C while booting: a fan
+  is still to be fitted.
+- **Deployed on the Pi 5:** the Dr Mario pause fix, the sound change below, and Crossy
+  Road's "player 1 button 3 jumps player 2" (`tools/crossy_keys.py`, not yet played).
+- **The menu froze on a black DEMO screen** on the Pi 5 (Sept 25; cause not yet known,
+  the video decoder thread was stuck waiting on a lock). `cab.sh` now has a watchdog: the
+  menu touches `/tmp/cab_alive` every 2s and a menu silent for 30s is restarted, with a
+  gdb trace saved as `/tmp/menu_freeze_*.txt` first. Read those traces to find the real
+  cause (`/tmp` is cleared on reboot, so check before restarting the Pi).
+- **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
+  when the cabinet is on.
 - Project moved to a second Claude account; this file replaces the old chat history.
-  Cloud sessions can't reach the Pi or the PC. Deploys, screenshots and the card check
-  need Claude Code running on the PC (Tailscale + `PIPW` set).
+  Cloud sessions can't reach the Pi or the PC; run Claude Code on the PC.
+- **Reaching the Pi:** `tools/cab.py` / `tools/pi.py` log in with the PC's SSH key, no
+  password. Claude does not use the Pi's password. Passwordless `sudo` is allowed only for
+  `reboot`, `poweroff` and `systemctl restart cabweb` (`/etc/sudoers.d/cabinet`); anything
+  else needing `sudo` is for Jay to run.
 
 ## Moving to the Pi 5
 
