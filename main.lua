@@ -1301,8 +1301,18 @@ function love.draw()
                  math.floor((sh - H * sy) / 2) + NUDGE_Y, 0, sx, sy)
 end
 
+-- Proof of life for cab.sh: a menu that stops touching this file has frozen (on the Pi 5
+-- it has stuck on a black demo), and cab.sh restarts it rather than leaving it dark.
+local ALIVE_FILE = "/tmp/cab_alive"
+local aliveAt = -10
+
 function love.update(dt)
   t = t + dt
+  if t - aliveAt > 2 then
+    aliveAt = t
+    local f = io.open(ALIVE_FILE, "w")
+    if f then f:write(os.time(), "\n") f:close() end
+  end
   if tune and not tune:isPlaying() then playNextTune() end
   if messageTimer then messageTimer = messageTimer - dt end
   if shotMode then

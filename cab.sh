@@ -29,9 +29,33 @@ sleep 2
 
 rm -f /tmp/cab_stop
 while true; do
-  rm -f /tmp/cab_launch
-  love /home/jayrogs/cabmenu.love >> $LOG 2>&1
+  rm -f /tmp/cab_launch /tmp/cab_alive
+  love /home/jayrogs/cabmenu.love >> $LOG 2>&1 &
+  MENU=$!
+  # The menu touches /tmp/cab_alive every two seconds. On the Pi 5 it has frozen on a
+  # black demo screen; if the file goes 30 seconds without a touch (or never appears
+  # within a minute and a half of starting), note where it was stuck and restart it.
+  ( t0=$(date +%s)
+    while kill -0 $MENU 2>/dev/null; do
+      sleep 5
+      now=$(date +%s)
+      if [ -f /tmp/cab_alive ]; then
+        age=$(( now - $(stat -c %Y /tmp/cab_alive) ))
+      else
+        age=$(( now - t0 - 60 ))
+      fi
+      if [ $age -gt 30 ]; then
+        F=/tmp/menu_freeze_$(date +%m%d-%H%M%S).txt
+        timeout 30 gdb -p $MENU -batch -ex "thread apply all bt 25" > "$F" 2>&1
+        echo "$(date) menu frozen ${age}s, restarting it (trace in $F)" >> $LOG
+        kill -9 $MENU 2>/dev/null
+        break
+      fi
+    done ) &
+  WATCH=$!
+  wait $MENU
   rc=$?
+  kill $WATCH 2>/dev/null
   if [ -f /tmp/cab_launch ]; then
     echo "$(date) running: $(cat /tmp/cab_launch)" >> $LOG
     t0=$(date +%s)
