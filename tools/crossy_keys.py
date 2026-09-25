@@ -15,6 +15,7 @@ ENV = dict(os.environ, DISPLAY=":0", XDG_RUNTIME_DIR="/run/user/1000")
 COIN_HOLD = 0.35         # a shorter coin press is not counted: 0.1 s was ignored, 0.35 s worked
 
 WEB1, WEB2 = "Cab Web Panel", "Cab Web Panel 2"
+P1_JUMPS_P2 = e.BTN_THUMB2   # player 1's button 3
 
 
 def players():
@@ -66,12 +67,14 @@ def main():
                 for ev in dev.read():
                     if ev.type == e.EV_KEY and ev.value in (0, 1):
                         # the coin button puts a credit in; every other button jumps, held
-                        # for as long as the button is
+                        # for as long as the button is. Player 1's button 3 jumps player 2
+                        # instead, so one person can run both chickens from one side.
                         if ev.code in (e.BTN_BASE2, e.BTN_SELECT, e.BTN_BASE3):
                             if ev.value == 1:
                                 threading.Thread(target=coin_in, args=(coin[p],), daemon=True).start()
                         else:
-                            key("keydown" if ev.value == 1 else "keyup", jump[p])
+                            who = 2 if p == 1 and ev.code == P1_JUMPS_P2 else p
+                            key("keydown" if ev.value == 1 else "keyup", jump[who])
                     elif ev.type == e.EV_ABS and ev.code == e.ABS_Y:
                         # pushing the stick away from you also jumps, once per push
                         away = ev.value < -16000 if p == 1 else ev.value > 16000
