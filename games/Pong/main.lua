@@ -520,7 +520,9 @@ end
 local function text(s, x, y, colour, flip, scale)
   -- x, y is the centre; flip draws it upside down, for the player at the far end
   scale = scale or 1
-  local w = font:getWidth(s) * scale
+  -- the font counts a blank column after every letter, the last one too: leave that one
+  -- out, or everything sits a pixel off centre (two at double size)
+  local w = (font:getWidth(s) - 1) * scale
   g.setColor(colour or { 1, 1, 1 })
   if flip then
     g.print(s, x + w / 2, y + 4 * scale, math.pi, scale, scale)
@@ -657,7 +659,13 @@ local function drawTitle()
     for i, s in ipairs(settings) do
       local here = S.sel == i + 1
       local c = here and { 1, 0.9, 0.3 } or { 0.5, 0.5, 0.6 }
-      text((here and "> " or "  ") .. s, W / 2, Y(46 - (i - 1) * 12), c, flip)
+      -- the words are centred on their own; the marker sits just before them (a "> "
+      -- or blank in front pushed every line off centre)
+      text(s, W / 2, Y(46 - (i - 1) * 12), c, flip)
+      if here then
+        local half = font:getWidth(s) / 2 + 7
+        text(">", flip and (W / 2 + half) or (W / 2 - half), Y(46 - (i - 1) * 12), c, flip)
+      end
     end
   end
   -- the middle of the court is left to the ball bouncing about
