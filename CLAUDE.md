@@ -11,8 +11,10 @@ lives where on it. Read both first.
   ~5.05V with no throttling, the 3H controls board, the USB-C sound adapter as the default
   output, menu, phone page and video feed all fine. Idled ~55°C without a fan; with the
   Active Cooler it idles ~49°C. The onn USB-C sound adapter buzzes (worse than the Pi 4's
-  jack); the sink volume is boosted to 180% so the amp can be turned down. Replacement
-  (Apple adapter or a DAC HAT) still to do.
+  jack). The HDMI-to-VGA converter has no audio socket, so the adapter stays. Workaround
+  Jay is happy with: the sink volume is boosted to 180% (`wpctl set-volume
+  @DEFAULT_AUDIO_SINK@ 1.8`) and the amp's dial turned down, which buries the buzz. Keep
+  it there; an Apple USB-C adapter or a DAC HAT would be the real fix if ever wanted.
 - **Deployed on the Pi 5:** the Dr Mario pause fix, the sound change below, and Crossy
   Road's "player 1 button 3 jumps player 2" (`tools/crossy_keys.py`, not yet played).
 - **The menu froze on a black DEMO screen** on the Pi 5 (Sept 25; cause not yet known,
