@@ -38,7 +38,7 @@ lives where on it. Read both first.
   Named_Boxarts (max 512px wide) for 540 games; the title screens they replaced are in
   each set's `media/titles/`. The menu draws at `DETAIL` x its 256x320 layout (3x on the
   cabinet) so pictures keep their detail; before, they were squashed to 256x320 first.
-- **Pong's music** plays files from `~/roms/music/pong` (`\192.168.1.76\games\music\pong` from a PC):
+- **Pong's music** plays files from `~/roms/music/pong` (the `games` share, `music\pong`, from a PC):
   a name containing "title" on the title screen, anything else in games (random each game).
   In there now: two CC-BY loops by Tomasz Kucza and CC0 "Starlight City" (see its
   CREDITS.txt). With the folder empty, the built-in French-house tunes in
