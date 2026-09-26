@@ -102,16 +102,31 @@ local function flapPressed(p)
   for _, k in ipairs(KEYS[p].start) do if pressed[k] then return true end end
   for _, js in ipairs(padsFor(p)) do
     if jsPressed[js] then return true end
-    -- the stick counts too: shoved any way, it flaps
-    for h = 1, js:getHatCount() do
-      local v = js:getHat(h)
-      if v and v ~= "c" and not (js.lastHat == v) then js.lastHat = v; return true end
-    end
   end
   return false
 end
 
 function love.joystickpressed(js, b) jsPressed[js] = b end
+
+-- The stick counts too: shoved any way, it flaps, once per shove. The cabinet's panels
+-- report the stick as two axes (not a hat), so both are watched.
+local stick = {}
+function love.joystickaxis(js, axis, v)
+  if axis > 2 then return end
+  local s = stick[js] or { 0, 0, out = false }
+  stick[js] = s
+  s[axis] = v
+  local far = math.max(math.abs(s[1]), math.abs(s[2]))
+  if far > 0.5 and not s.out then
+    s.out = true
+    jsPressed[js] = true
+  elseif far < 0.3 then
+    s.out = false
+  end
+end
+function love.joystickhat(js, h, v)
+  if v ~= "c" then jsPressed[js] = true end
+end
 function love.keypressed(k)
   if k == "escape" then love.event.quit() end
   pressed[k] = true
@@ -123,7 +138,7 @@ end
 local S = {
   state = "title",          -- title | choose | ready | play | crashed | between | over
   t = 0, idle = 0, seed = 1,
-  scroll = 0,
+  scroll = 0, run = 0,
   players = 1, turn = 1, round = 1,
   totals = { 0, 0 }, bestRun = { 0, 0 },
   bird = nil, best = 0,
@@ -147,6 +162,7 @@ end
 
 local function beginTurn()
   S.scroll = 0
+  S.run = 0
   S.bird = newBird(S.turn)
   S.state = "ready"
   S.timer = 0
@@ -174,13 +190,15 @@ local function feathers(b, n, colour)
   end
 end
 
-local function pipesNear(scroll)
+-- Pipes are placed by how far this turn has flown (S.run), which only counts once the
+-- bird is actually flying, and the first one starts just off the right edge. Placed by
+-- the scenery's scroll instead, they came through the bird while it waited to start.
+local PIPE_START = VIEW_W + 20
+local function pipesNear(run)
   local out = {}
-  local first = math.floor((scroll - 40) / PIPE_EVERY)
+  local first = math.max(1, math.floor((run - PIPE_START - L.PIPE_W) / PIPE_EVERY) + 1)
   for n = first, first + math.ceil(VIEW_W / PIPE_EVERY) + 2 do
-    if n >= 1 then
-      out[#out + 1] = { n = n, x = n * PIPE_EVERY - scroll, top = gapFor(n) }
-    end
+    out[#out + 1] = { n = n, x = PIPE_START + (n - 1) * PIPE_EVERY - run, top = gapFor(n) }
   end
   return out
 end
@@ -266,8 +284,9 @@ function love.update(dt)
     if S.timer > 0.4 and anyFlap() then S.state = "play" end
   elseif S.state == "play" then
     S.scroll = S.scroll + SPEED * dt
+    S.run = S.run + SPEED * dt
     local b = S.bird
-    local pipes = pipesNear(S.scroll)
+    local pipes = pipesNear(S.run)
     updateFeathers(b, dt)
     if anyFlap() then
       b.vy = FLAP
@@ -364,7 +383,7 @@ local function drawWorld()
   L.city(S.scroll, night)
   local playing = S.state ~= "title" and S.state ~= "choose"
   if playing then
-    for _, pipe in ipairs(pipesNear(S.scroll)) do
+    for _, pipe in ipairs(pipesNear(S.run)) do
       L.pipe(pipe.x, pipe.top, GAP, night)
     end
   end
@@ -497,15 +516,17 @@ local realUpdate = love.update
 function love.update(dt)
   -- the self test flies for itself, so the pictures show a real game
   if S.auto then
+    -- press for whoever is flying: player 1's key does nothing on player 2's turn
+    local flapKey = (S.players == 2 and S.turn == 2) and "m" or "space"
     if S.state == "play" and S.bird then
       local b = S.bird
       local aim = VIEW_H * 0.45
-      for _, pipe in ipairs(pipesNear(S.scroll)) do
+      for _, pipe in ipairs(pipesNear(S.run)) do
         if pipe.x + L.PIPE_W > b.x - 10 then aim = pipe.top + GAP * 0.5; break end
       end
-      if b.y > aim + 4 and b.vy > -40 then pressed["space"] = true end
+      if b.y > aim + 4 and b.vy > -40 then pressed[flapKey] = true end
     elseif S.state == "ready" or S.state == "between" or S.state == "over" then
-      pressed["space"] = true
+      pressed[flapKey] = true
     end
   end
   realUpdate(dt)
