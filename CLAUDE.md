@@ -36,8 +36,9 @@ lives where on it. Read both first.
   Named_Boxarts (max 512px wide) for 540 games; the title screens they replaced are in
   each set's `media/titles/`. The menu draws at `DETAIL` x its 256x320 layout (3x on the
   cabinet) so pictures keep their detail; before, they were squashed to 256x320 first.
-- **Pong's music** was rewritten (`games/Pong/music.lua`): 16-bar game tune and 8-bar
-  title tune, band-limited pulses, triangle bass, drums, looped echo.
+- **Pong's music** is synthwave (`games/Pong/music.lua`, Sept 25): 16-bar D-minor game tune
+  (118 BPM, sidechained saw bass, detuned pads, arpeggio, reverb) and an ambient 8-bar
+  title tune. Built at first launch and cached as a .wav in the save folder (VERSION).
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.
