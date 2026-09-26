@@ -254,27 +254,61 @@ local function newGame(players, whoStarted)
   serve()
 end
 
-local function cpuSteer(p, dt)
-  -- the machine chases where the ball will cross its line, badly at the easy level
-  local b, pad = S.ball, S.pad[p]
-  local level = CFG.cpu
-  local coming = (p == 1 and b.vy > 0) or (p == 2 and b.vy < 0)
-  local target = W / 2
-  if coming then
-    local dist = math.abs(PAD_Y[p] - b.y)
-    local tx = b.x + b.vx * (dist / math.max(1, math.abs(b.vy)))
-    -- fold the aim back off the walls
-    while tx < 0 or tx > W do
-      if tx < 0 then tx = -tx else tx = 2 * W - tx end
-    end
-    local wobble = ({ 14, 7, 2 })[level]
-    target = tx + math.sin(S.t * 3 + p) * wobble
+-- How well the machine plays. It used to know exactly where every ball would land at
+-- every level, differing only in speed, so even EASY hit nearly everything.
+--   predict  works out where the ball will cross its line (else chases where it is now)
+--   miss     its aim is off by up to this much each time the ball comes (paddle half-width
+--            is 14, so beyond that it can miss outright)
+--   react    seconds before it starts moving to a ball coming its way
+--   speed    how fast its paddle moves (a person's moves at 150)
+--   power    chance of a power shot on each return
+local MACHINE = {                      -- measured against a stand-in person (PONG_TEST=difficulty):
+  { predict = true, miss = 18, react = 0.28, speed = 105, power = 0 },     -- EASY:   you win ~85-90%
+  { predict = true, miss = 16, react = 0.22, speed = 125, power = 0.05 },  -- NORMAL: ~55%, a fair match
+  { predict = true, miss = 15, react = 0.16, speed = 145, power = 0.1 },   -- HARD:   ~20%
+}
+local DEMO_MACHINE = { predict = true, miss = 4, react = 0.1, speed = 170, power = 0.25 }
+
+local function landing(p)
+  -- where the ball will cross player p's line, folded back off the walls
+  local b = S.ball
+  local dist = math.abs(PAD_Y[p] - b.y)
+  local tx = b.x + b.vx * (dist / math.max(1, math.abs(b.vy)))
+  while tx < 0 or tx > W do
+    if tx < 0 then tx = -tx else tx = 2 * W - tx end
   end
-  local maxv = ({ 70, 110, 170 })[level]
+  return tx
+end
+
+local function machineFor()
+  return S.state == "demo" and DEMO_MACHINE or MACHINE[CFG.cpu]
+end
+
+local function cpuSteer(p, dt)
+  local b, pad, m = S.ball, S.pad[p], machineFor()
+  local coming = (p == 1 and b.vy > 0) or (p == 2 and b.vy < 0)
+  if coming and not pad.tracking then
+    -- a new ball on its way: a fresh mistake, and a moment before it reacts
+    pad.tracking = true
+    pad.err = (love.math.random() * 2 - 1) * m.miss
+    pad.wait = m.react
+  elseif not coming then
+    pad.tracking = false
+  end
+  local target = pad.target or W / 2
+  if coming then
+    pad.wait = (pad.wait or 0) - dt
+    if pad.wait <= 0 then
+      target = (m.predict and landing(p) or b.x + BALL / 2) + pad.err
+    end
+  else
+    target = W / 2                                     -- drift back to the middle
+  end
+  pad.target = target
   local d = target - pad.x
   local v = 0
   if math.abs(d) > 2 then v = (d > 0) and 1 or -1 end
-  return v, maxv
+  return v, m.speed
 end
 
 local function movePads(dt)
@@ -283,6 +317,7 @@ local function movePads(dt)
     local v, maxv
     if S.human[p] and S.state ~= "demo" then
       v, maxv = steer(p), 150
+      if S.testBot then v = S.testBot(p, dt) end    -- the difficulty test's stand-in player
     else
       v, maxv = cpuSteer(p, dt)
     end
@@ -301,7 +336,7 @@ local function hitPaddle(p)
   b.speed = math.min(SPEED_MAX, b.speed * SPEED_UP)
   local powered = false
   if pad.cool <= 0 and ((S.human[p] and S.state ~= "demo" and anyButtonDown(p))
-                        or ((not S.human[p] or S.state == "demo") and love.math.random() < 0.25)) then
+                        or ((not S.human[p] or S.state == "demo") and love.math.random() < machineFor().power)) then
     powered = true
     pad.cool = COOLDOWN
     pad.boost = 0.4
@@ -600,17 +635,15 @@ local function drawTitle()
   for end_ = 1, 2 do
     local flip = end_ == 2
     local function Y(fromEdge) return flip and fromEdge or (H - fromEdge) end
-    text("PONG", W / 2, Y(106), { 1, 1, 1 }, flip, 2)
+    text("PONG", W / 2, Y(100), { 1, 1, 1 }, flip, 2)
 
-    -- the START button: a framed box, lit and pulsing while it is the one chosen
+    -- the START button: a small framed box, lit and pulsing while it is the one chosen
     local on = S.sel == 1
-    local bw, bh = 104, 22
-    local bx, by = W / 2 - bw / 2, Y(76) - bh / 2
+    local bw, bh = 56, 15
+    local bx, by = W / 2 - bw / 2, Y(70) - bh / 2
     if on then
-      for i = 3, 1, -1 do             -- a soft glow round it
-        g.setColor(0.2, 0.8, 1, 0.08 * glow + 0.04)
-        g.rectangle("fill", bx - i * 2, by - i * 2, bw + i * 4, bh + i * 4, 4, 4)
-      end
+      g.setColor(0.2, 0.8, 1, 0.1 * glow + 0.05)       -- a soft glow round it
+      g.rectangle("fill", bx - 3, by - 3, bw + 6, bh + 6, 4, 4)
       g.setColor(0.1, 0.45 + 0.2 * glow, 0.6 + 0.2 * glow)
     else
       g.setColor(0.08, 0.1, 0.16)
@@ -618,20 +651,16 @@ local function drawTitle()
     g.rectangle("fill", bx, by, bw, bh, 3, 3)
     g.setColor(on and { 0.6, 1, 1 } or { 0.35, 0.4, 0.55 })
     g.rectangle("line", bx + 0.5, by + 0.5, bw - 1, bh - 1, 3, 3)
-    text("START", W / 2, Y(76), on and { 1, 1, 1 } or { 0.55, 0.6, 0.7 }, flip, 2)
+    text("START", W / 2, Y(70), on and { 1, 1, 1 } or { 0.55, 0.6, 0.7 }, flip)
 
-    -- the settings under it
+    -- the settings under it, with room to breathe
     for i, s in ipairs(settings) do
       local here = S.sel == i + 1
-      local c = here and { 1, 0.9, 0.3 } or { 0.6, 0.6, 0.7 }
-      text((here and "> " or "  ") .. s, W / 2, Y(48 - (i - 1) * 11), c, flip)
+      local c = here and { 1, 0.9, 0.3 } or { 0.5, 0.5, 0.6 }
+      text((here and "> " or "  ") .. s, W / 2, Y(46 - (i - 1) * 12), c, flip)
     end
   end
-  -- the prompt across the middle, facing both seats
-  if math.floor(S.t * 2) % 2 == 0 then
-    local msg = S.sel == 1 and "PRESS ANY BUTTON" or "PRESS START"
-    both(msg, H / 2 + 8, H / 2 - 8, { 0.6, 1, 1 })
-  end
+  -- the middle of the court is left to the ball bouncing about
 end
 
 function love.draw()
@@ -681,6 +710,50 @@ function love.load()
     _, sd = tone(180, 0.45, "slide", 0.5); A.stats("score", sd)
     for _, k in ipairs({ "title", "play" }) do A.stats(k, music.data(k)) end
     love.filesystem.write("audio.txt", table.concat(A.out, string.char(10)))
+    love.event.quit()
+    return
+  end
+  if os.getenv("PONG_TEST") == "difficulty" then
+    -- each machine level against a stand-in person (reads the ball, but a fifth of a second
+    -- late and up to 16 pixels off, missing about one ball in ten), for three hours of play each; prints who won the points
+    love.audio.setVolume(0)
+    local bot = {}
+    S.testBot = function(p, dt)
+      local b, pad = S.ball, S.pad[p]
+      local coming = (p == 1 and b.vy > 0) or (p == 2 and b.vy < 0)
+      if coming and not bot.tracking then
+        bot.tracking, bot.wait, bot.err = true, 0.22, (love.math.random() * 2 - 1) * 16
+      elseif not coming then
+        bot.tracking = false
+      end
+      local target = W / 2
+      if coming then
+        bot.wait = bot.wait - dt
+        target = bot.wait <= 0 and (landing(p) + bot.err) or pad.x
+      end
+      local d = target - pad.x
+      return math.abs(d) > 2 and ((d > 0) and 1 or -1) or 0
+    end
+    local lines = {}
+    for level = 1, 3 do
+      CFG.cpu = level
+      local won = { 0, 0 }
+      newGame(1, 1)
+      local last = { 0, 0 }
+      for _ = 1, 60 * 60 * 180 do
+        love.update(1 / 60)
+        for p = 1, 2 do
+          if S.score[p] > last[p] then won[p] = won[p] + (S.score[p] - last[p]) end
+        end
+        last = { S.score[1], S.score[2] }
+        if S.state == "over" or S.state == "title" then newGame(1, 1); last = { 0, 0 } end
+      end
+      lines[#lines + 1] = ("%-6s you win %3d%% of points (%d to %d)"):format(
+        ({ "EASY", "NORMAL", "HARD" })[level], math.floor(100 * won[1] / math.max(1, won[1] + won[2]) + 0.5),
+        won[1], won[2])
+      print(lines[#lines])
+    end
+    love.filesystem.write("difficulty.txt", table.concat(lines, string.char(10)))
     love.event.quit()
     return
   end
