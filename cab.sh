@@ -57,10 +57,19 @@ while true; do
   rc=$?
   kill $WATCH 2>/dev/null
   if [ -f /tmp/cab_launch ]; then
+    rm -f /tmp/cab_again
+    while true; do
     echo "$(date) running: $(cat /tmp/cab_launch)" >> $LOG
     t0=$(date +%s)
     sh /tmp/cab_launch >> $LOG 2>&1
     echo "$(date) game finished rc=$? after $(( $(date +%s) - t0 ))s" >> $LOG
+    # a tap on the side button (cabside.py) stops the game and leaves this note: start
+    # the same game again rather than going back to the shelf
+    if [ -f /tmp/cab_again ]; then
+      rm -f /tmp/cab_again
+      echo "$(date) side button tapped: same game again" >> $LOG
+      continue
+    fi
     # a game that quits inside five seconds never really started: an arcade file
     # built for the other emulator looks exactly like this. Try the other one.
     if [ $(( $(date +%s) - t0 )) -lt 5 ] && [ -f /tmp/cab_launch2 ]; then
@@ -68,12 +77,16 @@ while true; do
       t1=$(date +%s)
       sh /tmp/cab_launch2 >> $LOG 2>&1
       echo "$(date) second try finished after $(( $(date +%s) - t1 ))s" >> $LOG
+      # tapped during the second try: round again, which lands on the second try again
+      [ -f /tmp/cab_again ] && continue
       if [ $(( $(date +%s) - t1 )) -lt 5 ]; then
         echo "that game would not start - wrong files for this emulator" > /tmp/cab_message
       fi
     elif [ $(( $(date +%s) - t0 )) -lt 5 ]; then
       echo "that game would not start" > /tmp/cab_message
     fi
+    break
+    done
     rm -f /tmp/cab_launch /tmp/cab_launch2
     sleep 1
   else

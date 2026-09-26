@@ -20,7 +20,14 @@ except Exception as ex:
     print("no way to read the panel:", ex, flush=True)
     raise SystemExit(1)
 
-SIDE = e.BTN_BASE4          # the tenth button on the panel, which is the side one
+# Which button is "the side button". On the table it is player 2's side button, wired
+# to player 2's coin pin, which the board reports as the ninth button. Player 1's side
+# button (the tenth) is the coin button in the games instead, so it is left alone here.
+# The phone page's pads keep their tenth button: their ninth is Start.
+PANEL = "3H Dual Arcade"
+
+def sides_on(d):
+    return (e.BTN_BASE3,) if d.name.startswith(PANEL) else (e.BTN_BASE4,)
 HOLD = 0.7                  # held this long counts as a hold, not a tap
 AGAIN = "/tmp/cab_again"    # the note the launcher looks for: play that game again
 RESCAN = 3.0                # how often to look for a panel being plugged in
@@ -97,7 +104,7 @@ def panels():
         try:
             d = evdev.InputDevice(path)
             keys = d.capabilities().get(e.EV_KEY, [])
-            if SIDE in keys:
+            if any(s in keys for s in sides_on(d)):
                 found.append(d)
             else:
                 d.close()
@@ -139,7 +146,7 @@ def main():
         for d in ready:
             try:
                 for ev in d.read():
-                    if ev.type != e.EV_KEY or ev.code != SIDE:
+                    if ev.type != e.EV_KEY or ev.code not in sides_on(d):
                         continue
                     if ev.value == 1:               # pressed
                         down_at = time.time()

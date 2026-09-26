@@ -69,7 +69,11 @@ def main():
                         # the coin button puts a credit in; every other button jumps, held
                         # for as long as the button is. Player 1's button 3 jumps player 2
                         # instead, so one person can run both chickens from one side.
-                        if ev.code in (e.BTN_BASE2, e.BTN_SELECT, e.BTN_BASE3):
+                        # BTN_BASE4 is player 1's side button, the cabinet's coin button.
+                        # Player 2's side button (BTN_BASE3) is left to cabside.py.
+                        if ev.code == e.BTN_BASE3:
+                            continue
+                        if ev.code in (e.BTN_BASE2, e.BTN_SELECT, e.BTN_BASE4):
                             if ev.value == 1:
                                 threading.Thread(target=coin_in, args=(coin[p],), daemon=True).start()
                         else:
