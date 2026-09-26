@@ -620,7 +620,8 @@ local function drawPlay()
 end
 
 local function drawTitle()
-  drawCourt()
+  g.setColor(0.28, 0.28, 0.4)
+  g.rectangle("fill", 0, 0, 1, H); g.rectangle("fill", W - 1, 0, 1, H)
   -- a ball bounces about behind the title for life
   local bx = W / 2 + math.sin(S.t * 1.3) * 70
   local by = H / 2 + math.cos(S.t * 0.9) * 90
@@ -632,43 +633,34 @@ local function drawTitle()
     "FIRST TO " .. CFG.toWin,
   }
   local glow = 0.5 + 0.5 * math.sin(S.t * 5)
-  -- each end is laid out for player 1 at the bottom; player 2's is the same turned round
-  -- (y measured from their edge instead of ours)
-  for end_ = 1, 2 do
-    local flip = end_ == 2
-    local function Y(fromEdge) return flip and fromEdge or (H - fromEdge) end
-    text("PONG", W / 2, Y(100), { 1, 1, 1 }, flip, 2)
+  -- one title, facing player 1: whoever is at the table can run it from either panel
+  text("PONG", W / 2, 78, { 1, 1, 1 }, false, 3)
 
-    -- the START button: a small framed box, lit and pulsing while it is the one chosen
-    local on = S.sel == 1
-    local bw, bh = 56, 15
-    local bx, by = W / 2 - bw / 2, Y(70) - bh / 2
-    if on then
-      g.setColor(0.2, 0.8, 1, 0.1 * glow + 0.05)       -- a soft glow round it
-      g.rectangle("fill", bx - 3, by - 3, bw + 6, bh + 6, 4, 4)
-      g.setColor(0.1, 0.45 + 0.2 * glow, 0.6 + 0.2 * glow)
-    else
-      g.setColor(0.08, 0.1, 0.16)
-    end
-    g.rectangle("fill", bx, by, bw, bh, 3, 3)
-    g.setColor(on and { 0.6, 1, 1 } or { 0.35, 0.4, 0.55 })
-    g.rectangle("line", bx + 0.5, by + 0.5, bw - 1, bh - 1, 3, 3)
-    text("START", W / 2, Y(70), on and { 1, 1, 1 } or { 0.55, 0.6, 0.7 }, flip)
-
-    -- the settings under it, with room to breathe
-    for i, s in ipairs(settings) do
-      local here = S.sel == i + 1
-      local c = here and { 1, 0.9, 0.3 } or { 0.5, 0.5, 0.6 }
-      -- the words are centred on their own; the marker sits just before them (a "> "
-      -- or blank in front pushed every line off centre)
-      text(s, W / 2, Y(46 - (i - 1) * 12), c, flip)
-      if here then
-        local half = font:getWidth(s) / 2 + 7
-        text(">", flip and (W / 2 + half) or (W / 2 - half), Y(46 - (i - 1) * 12), c, flip)
-      end
-    end
+  -- the START button: a small framed box, lit and pulsing while it is the one chosen
+  local on = S.sel == 1
+  local bw, bh, cy = 60, 16, 132
+  local bx, by = W / 2 - bw / 2, cy - bh / 2
+  if on then
+    g.setColor(0.2, 0.8, 1, 0.1 * glow + 0.05)         -- a soft glow round it
+    g.rectangle("fill", bx - 3, by - 3, bw + 6, bh + 6, 4, 4)
+    g.setColor(0.1, 0.45 + 0.2 * glow, 0.6 + 0.2 * glow)
+  else
+    g.setColor(0.08, 0.1, 0.16)
   end
-  -- the middle of the court is left to the ball bouncing about
+  g.rectangle("fill", bx, by, bw, bh, 3, 3)
+  g.setColor(on and { 0.6, 1, 1 } or { 0.35, 0.4, 0.55 })
+  g.rectangle("line", bx + 0.5, by + 0.5, bw - 1, bh - 1, 3, 3)
+  text("START", W / 2, cy, on and { 1, 1, 1 } or { 0.55, 0.6, 0.7 })
+
+  -- the settings under it. The words are centred on their own; the marker sits just
+  -- before them (a "> " or blank in front pushed every line off centre)
+  for i, s in ipairs(settings) do
+    local here = S.sel == i + 1
+    local c = here and { 1, 0.9, 0.3 } or { 0.5, 0.5, 0.6 }
+    local y = 172 + (i - 1) * 13
+    text(s, W / 2, y, c)
+    if here then text(">", W / 2 - font:getWidth(s) / 2 - 7, y, c) end
+  end
 end
 
 function love.draw()
