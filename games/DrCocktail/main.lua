@@ -407,6 +407,9 @@ local function tick(inp)
           else G.musicType = MUSIC_ORDER[math.max(1, math.min(3, musicIndex(G.musicType) + d))] end
           playFrom("UI", MENU_SFX)
         end
+        -- the computer plays at exactly player 1's level and speed, so its marker on this
+        -- screen follows player 1's as it changes (it showed its old settings until start)
+        if G.cpu[2] then G.settings[2] = { level = s.level, speed = s.speed } end
         if i.back then
           playFrom("UI", MENU_SFX)
           goTitle()
@@ -1113,6 +1116,11 @@ local function selftest()
   G.settings[1] = { level = 4, speed = "low" }
   tick({ { start = true }, {} })
   check(G.state == "setup" and G.cpu[2], "third title option starts a computer game")
+  G.settings[2] = { level = 17, speed = "hi" }        -- left over from an earlier game
+  tick({ { rightP = true }, {} })
+  check(G.settings[2].level == 5 and G.settings[2].speed == "low",
+        "the computer's marker on the setup screen follows player 1's level and speed")
+  tick({ { leftP = true }, {} })
   tick({ { start = true }, {} })
   check(G.state == "intro" and G.settings[2].level == 4 and G.ai and G.ai[2], "computer copies player 1's level and gets an AI")
   for _ = 1, 100 do tick({ {}, {} }) end

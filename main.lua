@@ -5,6 +5,7 @@
 local SYSTEMS = require("systems")
 
 local W, H = 256, 320
+local DETAIL = 1              -- how many times bigger the shelf is really drawn (love.load)
 local CELL = 8
 local HOME = os.getenv("HOME") or "."
 local ROOT = HOME .. "/roms"
@@ -1066,7 +1067,13 @@ function love.load(args)
   font:setFilter("nearest", "nearest")
   g.setFont(font)
   g.setLineStyle("rough")
-  screen = g.newCanvas(W, H)
+  -- The shelf is laid out at 256x320, but drawn DETAIL times bigger (the screen's own
+  -- size, 3x on the cabinet) so the games' pictures keep their detail: at 256x320 a
+  -- flyer was squashed into a stamp and then blown up into blocks. The pixel font and
+  -- the shapes are scaled with it and look exactly as they did.
+  local sw, sh = g.getDimensions()
+  DETAIL = math.max(1, math.min(4, math.floor(math.min(sw / W, sh / H))))
+  screen = g.newCanvas(W * DETAIL, H * DETAIL)
   screen:setFilter("nearest", "nearest")
   readScreenConf()
   readState()
@@ -1139,6 +1146,8 @@ end
 function love.draw()
   g.setCanvas(screen)
   g.clear(0, 0, 0)
+  g.push()
+  g.scale(DETAIL)
   g.setColor(1, 1, 1)
   g.draw(bg, 0, 0)
 
@@ -1287,6 +1296,7 @@ function love.draw()
     end
   end
 
+  g.pop()
   g.setCanvas()
   -- same as the game: a VGA monitor can cut the edges off, so the picture can be
   -- pulled in (OVERSCAN) and shifted (NUDGE_X / NUDGE_Y)
@@ -1298,7 +1308,7 @@ function love.draw()
   end
   g.setColor(1, 1, 1)
   g.draw(screen, math.floor((sw - W * sx) / 2) + NUDGE_X,
-                 math.floor((sh - H * sy) / 2) + NUDGE_Y, 0, sx, sy)
+                 math.floor((sh - H * sy) / 2) + NUDGE_Y, 0, sx / DETAIL, sy / DETAIL)
 end
 
 -- Proof of life for cab.sh: a menu that stops touching this file has frozen (on the Pi 5

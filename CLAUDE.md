@@ -9,8 +9,10 @@ lives where on it. Read both first.
 - **Now running on a Raspberry Pi 5** (Sept 25). The Pi 4 died after being wired to 12V;
   the memory card survived and went straight in. Checked after a full reboot: power
   ~5.05V with no throttling, the 3H controls board, the USB-C sound adapter as the default
-  output, menu, phone page and video feed all fine. Idles ~55°C, 63°C while booting: a fan
-  is still to be fitted.
+  output, menu, phone page and video feed all fine. Idled ~55°C without a fan; with the
+  Active Cooler it idles ~49°C. The onn USB-C sound adapter buzzes (worse than the Pi 4's
+  jack); the sink volume is boosted to 180% so the amp can be turned down. Replacement
+  (Apple adapter or a DAC HAT) still to do.
 - **Deployed on the Pi 5:** the Dr Mario pause fix, the sound change below, and Crossy
   Road's "player 1 button 3 jumps player 2" (`tools/crossy_keys.py`, not yet played).
 - **The menu froze on a black DEMO screen** on the Pi 5 (Sept 25; cause not yet known,
@@ -30,6 +32,13 @@ lives where on it. Read both first.
     with `cab.sh` acting on `/tmp/cab_again`). The phone pads keep their own button 10.
   - The menu's "SET UP THE BUTTONS" tool rewrites that autoconfig file from whatever is
     pressed; a careless run is what broke it before. Don't run it without updating it.
+- **Arcade pictures are flyers** (Sept 25): `tools/art3.py --go` fetched libretro's
+  Named_Boxarts (max 512px wide) for 540 games; the title screens they replaced are in
+  each set's `media/titles/`. The menu draws at `DETAIL` x its 256x320 layout (3x on the
+  cabinet) so pictures keep their detail; before, they were squashed to 256x320 first.
+- **Pong's music** was rewritten (`games/Pong/music.lua`): 16-bar game tune and 8-bar
+  title tune, band-limited pulses, triangle bass, drums, looped echo.
+- **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.
 - Project moved to a second Claude account; this file replaces the old chat history.
