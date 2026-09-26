@@ -19,6 +19,7 @@ local GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,-:<>!?/'#@"
 -- control panel, in the order the Pi lists it.
 local WEB1, WEB2 = "Cab Web Panel", "Cab Web Panel 2"
 local AXIS_EDGE = 0.5
+local START_BUTTON = 8   -- the panel's Player 1 / Player 2 button, as LÖVE numbers it
 
 local CFG = {
   toWin = 7,           -- points to win: 5, 7 or 11
@@ -85,7 +86,8 @@ end
 local S = {
   state = "title",         -- title | play | point | over | demo
   t = 0, idle = 0,
-  sel = 1,                 -- title cursor: 1 two players, 2 one player, 3 machine level, 4 points
+  sel = 1,                 -- title cursor: 1 START, 2 mode, 3 machine level, 4 points
+  mode = 2,                -- what START begins: 2 players, or 1 against the machine
   players = 2,
   human = { true, true },
   score = { 0, 0 },
@@ -380,9 +382,25 @@ end
 
 -- ---------------------------------------------------------------- title
 local OPTIONS = 4
+-- The title is a big START button with the settings under it. A button on START begins
+-- the game; a button on a setting changes it. The cabinet's own Start buttons (and 1 / 2
+-- on a keyboard) begin the game from anywhere on the list.
+local function startGame(p)
+  play("menu")
+  newGame(S.mode, p)
+end
+
+local function startPressed(p)
+  if keyPressed(KEYS[p].start) then return true end
+  for _, js in ipairs(padsFor(p)) do
+    if jsPressed[js] == START_BUTTON then return true end
+  end
+  return false
+end
+
 local function titleAct(p)
-  if S.sel == 1 then play("menu"); newGame(2, p)
-  elseif S.sel == 2 then play("menu"); newGame(1, p)
+  if S.sel == 1 then startGame(p)
+  elseif S.sel == 2 then S.mode = 3 - S.mode; play("menu")
   elseif S.sel == 3 then CFG.cpu = CFG.cpu % 3 + 1; play("menu")
   elseif S.sel == 4 then
     CFG.toWin = ({ [5] = 7, [7] = 11, [11] = 5 })[CFG.toWin] or 7
@@ -405,7 +423,9 @@ local function updateTitle(dt)
     elseif v == 0 then
       S.held[p] = false
     end
+    if startPressed(p) then startGame(p) return end
     if anyButtonPressed(p) then titleAct(p) end
+    if S.state ~= "title" then return end
   end
   if S.idle > CFG.demoAfter then
     S.state = "demo"
@@ -569,26 +589,48 @@ local function drawTitle()
   local by = H / 2 + math.cos(S.t * 0.9) * 90
   g.setColor(0.25, 0.25, 0.35)
   g.rectangle("fill", bx, by, BALL, BALL)
-  local items = {
-    { "2 PLAYERS", nil },
-    { "1 PLAYER VS MACHINE", nil },
-    { "MACHINE: " .. ({ "EASY", "NORMAL", "HARD" })[CFG.cpu], nil },
-    { "FIRST TO " .. CFG.toWin, nil },
+  local settings = {
+    "MODE: " .. (S.mode == 2 and "2 PLAYERS" or "VS MACHINE"),
+    "MACHINE: " .. ({ "EASY", "NORMAL", "HARD" })[CFG.cpu],
+    "FIRST TO " .. CFG.toWin,
   }
+  local glow = 0.5 + 0.5 * math.sin(S.t * 5)
+  -- each end is laid out for player 1 at the bottom; player 2's is the same turned round
+  -- (y measured from their edge instead of ours)
   for end_ = 1, 2 do
     local flip = end_ == 2
-    local base = flip and 44 or H - 44
-    local dir = flip and 1 or -1
-    text("PONG", W / 2, base + dir * 34, { 1, 1, 1 }, flip, 2)
-    for i, it in ipairs(items) do
-      local on = S.sel == i
-      local y = base - dir * (i - 1) * 11
-      local c = on and { 1, 0.9, 0.3 } or { 0.6, 0.6, 0.7 }
-      text((on and "> " or "  ") .. it[1], W / 2, y, c, flip)
+    local function Y(fromEdge) return flip and fromEdge or (H - fromEdge) end
+    text("PONG", W / 2, Y(106), { 1, 1, 1 }, flip, 2)
+
+    -- the START button: a framed box, lit and pulsing while it is the one chosen
+    local on = S.sel == 1
+    local bw, bh = 104, 22
+    local bx, by = W / 2 - bw / 2, Y(76) - bh / 2
+    if on then
+      for i = 3, 1, -1 do             -- a soft glow round it
+        g.setColor(0.2, 0.8, 1, 0.08 * glow + 0.04)
+        g.rectangle("fill", bx - i * 2, by - i * 2, bw + i * 4, bh + i * 4, 4, 4)
+      end
+      g.setColor(0.1, 0.45 + 0.2 * glow, 0.6 + 0.2 * glow)
+    else
+      g.setColor(0.08, 0.1, 0.16)
+    end
+    g.rectangle("fill", bx, by, bw, bh, 3, 3)
+    g.setColor(on and { 0.6, 1, 1 } or { 0.35, 0.4, 0.55 })
+    g.rectangle("line", bx + 0.5, by + 0.5, bw - 1, bh - 1, 3, 3)
+    text("START", W / 2, Y(76), on and { 1, 1, 1 } or { 0.55, 0.6, 0.7 }, flip, 2)
+
+    -- the settings under it
+    for i, s in ipairs(settings) do
+      local here = S.sel == i + 1
+      local c = here and { 1, 0.9, 0.3 } or { 0.6, 0.6, 0.7 }
+      text((here and "> " or "  ") .. s, W / 2, Y(48 - (i - 1) * 11), c, flip)
     end
   end
+  -- the prompt across the middle, facing both seats
   if math.floor(S.t * 2) % 2 == 0 then
-    both("ANY BUTTON", H / 2 + 6, H / 2 - 6, { 0.5, 0.5, 0.6 })
+    local msg = S.sel == 1 and "PRESS ANY BUTTON" or "PRESS START"
+    both(msg, H / 2 + 8, H / 2 - 8, { 0.6, 1, 1 })
   end
 end
 
