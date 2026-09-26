@@ -1,9 +1,11 @@
 -- music.lua : the tunes, built by the game itself rather than loaded from files.
 --
--- Synthwave, the Tron sound: a saw bass rolling in sixteenths that ducks under every kick,
--- wide detuned pads, a glassy arpeggio in an echo, and a lead with the bounce of an old
--- puzzle-game tune (quarter, two eighths, quarter...), all in D minor and all sent into a
--- big reverb for the space. The title tune is the slow, floating version with no drums.
+-- French house, the Daft Punk way: four-on-the-floor kick, claps on two and four, a swung
+-- hi-hat and the open "tss" on every off-beat; a syncopated octave-bouncing bass with
+-- ghost notes; disco seventh-chord stabs on the off-beats through a filter that opens and
+-- closes across the loop; and a gliding, wah-wah "talk box" lead with a funky hook. The
+-- whole mix pumps with the kick. The title tune is the same groove filtered down, the
+-- way their records build.
 --
 -- Everything is one loop. The echo and the reverb run round the loop twice and keep the
 -- second time, so the tail of the end is already sounding at the start: no seam.
@@ -14,7 +16,7 @@
 local M = {}
 
 local RATE = 22050
-local VERSION = 2
+local VERSION = 3
 local SEMITONE = 2 ^ (1 / 12)
 local TAU = 2 * math.pi
 
@@ -27,50 +29,56 @@ local function freq(name)
   return 440 * SEMITONE ^ n
 end
 
--- chords: the notes, and the bass root
+-- seventh chords, voiced for the stabs, and the bass root
 local CHORDS = {
-  Dm = { "D", "F", "A", root = "D2" }, ["A#"] = { "A#", "D", "F", root = "A#1" },
-  F = { "F", "A", "C", root = "F2" }, C = { "C", "E", "G", root = "C2" },
-  Gm = { "G", "A#", "D", root = "G1" }, A = { "A", "C#", "E", root = "A1" },
+  Am7 = { "A3", "C4", "E4", "G4", root = "A1" },
+  D9 = { "F#3", "A3", "C4", "E4", root = "D2" },
+  Fmaj7 = { "F3", "A3", "C4", "E4", root = "F1" },
+  G = { "G3", "B3", "D4", "F#4", root = "G1" },
+  Em7 = { "E3", "G3", "B3", "D4", root = "E2" },
+  E7 = { "E3", "G#3", "B3", "D4", root = "E2" },
 }
+
+-- The bass, one bar of sixteenths: semitones above the root (false = silent), how hard,
+-- and how many sixteenths it lasts. The octave jumps and ghost notes are the funk.
+local BASS = {
+  { 0, 1, 2 }, false, false, { 12, 0.7, 1 },
+  false, { 0, 0.85, 1 }, { 0, 0.35, 1 }, false,
+  { 7, 0.9, 2 }, false, { 10, 0.75, 1 }, false,
+  { 12, 0.9, 1 }, false, { 0, 0.7, 1 }, { 7, 0.45, 1 },
+}
+
+local HOOK = [[
+  R:.5 E5:.25 G5:.25 R:.25 A5:.5 G5:.25 E5:.5 R:.5 G5:.5 A5:.5
+  F#5:.75 E5:.25 R:.5 D5:.5 E5:1 R:1
+  R:.5 E5:.25 G5:.25 R:.25 A5:.5 G5:.25 C6:.5 R:.5 B5:.5 A5:.5
+  F#5:.75 A5:.25 R:.5 F#5:.5 E5:1.5 R:.5
+  C6:1 A5:.5 G5:.5 F5:.5 E5:.5 R:1
+  D5:.5 E5:.5 F#5:.5 G5:.5 A5:1 B5:1
+  C6:.75 B5:.25 A5:.5 E5:.5 G5:1 R:1
+  G#5:1 B5:1 D6:.5 B5:.5 G#5:1
+]]
 
 local TUNES = {
   play = {
-    bpm = 118, drums = true,
-    chords = { "Dm", "A#", "F", "C", "Dm", "A#", "C", "A",
-               "Gm", "A#", "Dm", "A", "Gm", "A#", "C", "A" },
-    melody = [[
-      D5:1 A4:.5 D5:.5 F5:1 E5:.5 D5:.5
-      C5:1 A#4:.5 C5:.5 D5:1 F5:1
-      A5:1 G5:.5 F5:.5 C5:1 F5:.5 G5:.5
-      E5:1.5 D5:.5 C5:1 R:1
-      D5:.5 F5:.5 A5:1 D6:1 C6:.5 A5:.5
-      A#5:1 A5:.5 G5:.5 F5:1 D5:1
-      E5:.5 F5:.5 G5:1 E5:.5 C5:.5 G4:1
-      A4:1 C#5:1 E5:1 A5:1
-      G5:1.5 A#5:.5 A5:1 G5:1
-      F5:1.5 G5:.5 F5:1 D5:1
-      A5:.5 G5:.5 F5:.5 E5:.5 D5:1 A4:1
-      C#5:1 E5:1 A5:2
-      A#5:.5 A5:.5 G5:1 D5:.5 G5:.5 A#5:1
-      A5:.5 G5:.5 F5:1 A#4:.5 D5:.5 F5:1
-      G5:1 E5:.5 C5:.5 E5:1 G5:1
-      A5:1.5 G5:.5 E5:1 C#5:1
+    bpm = 122, full = true,
+    chords = { "Am7", "D9", "Am7", "D9", "Fmaj7", "G", "Am7", "E7",
+               "Am7", "D9", "Am7", "D9", "Fmaj7", "G", "Em7", "E7" },
+    melody = HOOK .. [[
+      A5:.25 R:.25 A5:.25 G5:.25 R:.5 E5:.5 G5:.25 R:.25 A5:.5 R:1
+      F#5:.25 R:.25 F#5:.25 E5:.25 R:.5 D5:.5 E5:1.5 R:.5
+      A5:.25 R:.25 A5:.25 G5:.25 R:.5 E5:.5 G5:.25 R:.25 C6:.5 R:1
+      B5:.5 A5:.5 F#5:.5 E5:.5 D5:1 R:1
+      A5:1.5 G5:.5 F5:1 E5:1
+      D5:.5 F#5:.5 A5:.5 B5:.5 D6:2
+      B5:.75 A5:.25 G5:.5 E5:.5 D5:1 E5:1
+      G#5:.5 B5:.5 D6:.5 E6:.5 D6:1 B5:1
     ]],
   },
   title = {
-    bpm = 88, drums = false,
-    chords = { "Dm", "A#", "F", "C", "Dm", "A#", "Gm", "A" },
-    melody = [[
-      A5:3 F5:1
-      D5:2 F5:2
-      C6:2 A5:1 F5:1
-      G5:4
-      F5:1 A5:1 D6:2
-      C6:1.5 A#5:.5 A5:2
-      G5:2 A#5:1 D6:1
-      C#6:2 E5:2
-    ]],
+    bpm = 118, full = false,
+    chords = { "Am7", "D9", "Am7", "D9", "Fmaj7", "G", "Am7", "E7" },
+    melody = HOOK,
   },
 }
 
@@ -237,113 +245,160 @@ local function parseMelody(text)
   return out
 end
 
--- ------------------------------------------------------------------ one tune
-local function build(spec)
-  local beat = 60 / spec.bpm
-  local bars = #spec.chords
-  local n = math.floor(bars * 4 * beat * RATE)
-  local ducked, dry, send, lead = buffer(n), buffer(n), buffer(n), buffer(n)
-  local drums = spec.drums
 
-  for bar = 0, bars - 1 do
-    local ch = CHORDS[spec.chords[bar + 1]]
-    local t0 = bar * 4 * beat
-    -- pads: every chord note, three detuned saws each, softly filtered, swelling in
-    for _, name in ipairs({ ch[1] .. "3", ch[2] .. "4", ch[3] .. "4", ch[1] .. "4" }) do
-      synth(ducked, n, t0, 4 * beat, freq(name), {
-        wave = "saw", voices = 3, detune = 14, vol = drums and 0.055 or 0.07,
-        attack = drums and 0.25 or 0.9, release = drums and 0.3 or 1.2,
-        cut = drums and 1500 or 1100,
-      })
-    end
-    -- bass
-    local root = freq(ch.root)
-    if drums then
-      -- the Tron roll: sixteenths, the octave on every other one, each a short pluck
-      for s = 0, 15 do
-        local f = (s % 2 == 1) and root * 2 or root
-        synth(ducked, n, t0 + s * beat / 4, beat / 4 * 0.8, f, {
-          wave = "saw", voices = 2, detune = 6, vol = 0.34,
-          cut = 2200, cutEnd = 380, sweep = 0.05, release = 0.015,
-        })
+-- a handclap: three quick bursts of noise then a tail, the way a room of hands sounds
+local function clap(buf, n, t, vol)
+  local i0 = math.floor(t * RATE)
+  local last, bp = 0, 0
+  local len = math.floor(0.22 * RATE)
+  for k = 0, len - 1 do
+    local s = k / RATE
+    local r = rng:random() * 2 - 1
+    local hp = r - last; last = r
+    bp = bp + 0.35 * (hp - bp)
+    local env
+    if s < 0.03 then env = math.exp(-((s % 0.01) * 300))     -- the three bursts
+    else env = math.exp(-(s - 0.03) * 18) end
+    local i = (i0 + k) % n + 1
+    buf[i] = buf[i] + bp * env * vol
+  end
+end
+
+-- The "talk box" lead: one voice that glides from note to note, with a wah on every note
+-- (the filter jumps open and settles), two detuned saws and a square an octave down.
+local function talkbox(buf, n, notes, beat, vol)
+  local t = 0
+  local f, phase = 0, { 0, 0.3, 0.6 }
+  local y1, y2 = 0, 0
+  for idx, m in ipairs(notes) do
+    local dur = m[2] * beat
+    local target = freq(m[1])
+    local i0 = math.floor(t * RATE)
+    local len = math.floor(dur * RATE)
+    local nextRest = not notes[idx + 1] or notes[idx + 1][1] == "R"
+    if target > 0 then
+      if f == 0 then f = target end
+      local rel = nextRest and math.floor(0.04 * RATE) or 0
+      for k = 0, len - 1 do
+        f = f + (target - f) * 0.004                      -- the glide
+        local vib = 1 + (k > RATE * 0.18 and 0.005 * math.sin(k / RATE * TAU * 5.5) or 0)
+        local s = 0
+        for v = 1, 3 do
+          local ff = f * vib * (v == 1 and 1.004 or (v == 2 and 0.996 or 0.5))
+          local dt = ff / RATE
+          local p = phase[v]
+          s = s + (v == 3 and sq(p, dt, 0.5) * 0.5 or saw(p, dt))
+          p = p + dt; if p >= 1 then p = p - 1 end
+          phase[v] = p
+        end
+        local ks = k / RATE
+        local fc = 650 + 2600 * (1 - math.exp(-ks / 0.025)) * math.exp(-ks / 0.22)
+        local a = 1 - math.exp(-TAU * fc / RATE)
+        y1 = y1 + a * (s - y1)
+        y2 = y2 + a * (y1 - y2)
+        local env = math.min(1, k / (0.006 * RATE))
+        if rel > 0 and k > len - rel then env = env * (len - k) / rel end
+        local i = (i0 + k) % n + 1
+        buf[i] = buf[i] + y2 * env * vol
       end
     else
-      synth(ducked, n, t0, 4 * beat, root, { wave = "tri", vol = 0.3, attack = 0.4, release = 0.8 })
-    end
-    -- the arpeggio: up through the chord across two octaves, glassy, into the echo
-    local arp = { ch[1] .. "5", ch[2] .. "5", ch[3] .. "5", ch[1] .. "6", ch[3] .. "5", ch[2] .. "5" }
-    local steps = drums and 16 or 8
-    for s = 0, steps - 1 do
-      local nm = arp[s % #arp + 1]
-      if nm:match("^%a#?6$") and not drums then nm = nm:gsub("6$", "5") end
-      synth(send, n, t0 + s * 4 * beat / steps, 4 * beat / steps * 0.7, freq(nm), {
-        wave = "square", duty = 0.25, vol = drums and 0.05 or 0.06,
-        decay = 14, cut = 3500, release = 0.02,
-      })
-    end
-    -- drums: four on the floor, snare on two and four, sixteenth hats
-    if drums then
-      for b = 0, 3 do drum(dry, n, t0 + b * beat, "kick", 0.95) end
-      local fill = bar % 8 == 7
-      drum(send, n, t0 + beat, "snare", 0.5)
-      if fill then
-        for s = 0, 3 do drum(send, n, t0 + (3 + s / 4) * beat, "snare", 0.28 + s * 0.08) end
-      else
-        drum(send, n, t0 + 3 * beat, "snare", 0.5)
-      end
-      for s = 0, 15 do
-        local kind = (s % 4 == 2) and "open" or "hat"
-        drum(dry, n, t0 + s * beat / 4, kind, s % 4 == 2 and 0.09 or (s % 2 == 0 and 0.05 or 0.08))
-      end
-    end
-  end
-
-  -- the lead: two detuned saws an octave apart would be too much; one bright square and
-  -- one soft saw together, with vibrato on the long notes
-  local t = 0
-  for _, m in ipairs(parseMelody(spec.melody)) do
-    local dur = m[2] * beat
-    local f = freq(m[1])
-    if f > 0 then
-      synth(lead, n, t, dur * 0.9, f, {
-        wave = "saw", voices = 2, detune = 9, vol = drums and 0.2 or 0.16,
-        cut = drums and 4200 or 2600, cutEnd = drums and 2400 or 1800, sweep = 0.3,
-        attack = drums and 0.01 or 0.06, release = 0.12, vibrato = m[2] >= 1,
-      })
-      synth(lead, n, t, dur * 0.9, f * 2, {
-        wave = "square", duty = 0.5, vol = drums and 0.045 or 0.03,
-        cut = 3000, attack = 0.01, release = 0.1, vibrato = m[2] >= 1,
-      })
+      f = 0
     end
     t = t + dur
   end
+end
 
-  -- the pumping: pads and bass duck under every kick and swell back
-  if drums then
-    local per = math.floor(beat * RATE)
-    for i = 1, n do
-      local since = ((i - 1) % per) / RATE
-      ducked[i] = ducked[i] * (1 - 0.7 * math.exp(-since * 9))
+-- ------------------------------------------------------------------ one tune
+local function build(spec)
+  local beat = 60 / spec.bpm
+  local six = beat / 4
+  local bars = #spec.chords
+  local n = math.floor(bars * 4 * beat * RATE)
+  local pumped, bass, dry, lead, send = buffer(n), buffer(n), buffer(n), buffer(n), buffer(n)
+  local full = spec.full
+  local SWING = 0.2                                 -- the late second sixteenth: the shuffle
+
+  local function at(bar, step)                       -- time of a sixteenth, swung
+    local t = bar * 4 * beat + step * six
+    if step % 2 == 1 then t = t + SWING * six end
+    return t
+  end
+
+  for bar = 0, bars - 1 do
+    local ch = CHORDS[spec.chords[bar + 1]]
+    -- the filter over the stabs opens and closes across the loop (the filter-house sweep)
+    local sweep = 0.5 - 0.5 * math.cos(TAU * bar / bars)
+    local stabCut = full and (700 + 2800 * sweep) or (350 + 700 * sweep)
+
+    -- disco stabs on the off-beats, and a push on the last sixteenth of every other bar
+    local stabs = { { 2, 1 }, { 6, 0.8 }, { 10, 1 }, { 14, 0.8 } }
+    if bar % 2 == 1 then stabs[#stabs + 1] = { 15, 0.6 } end
+    for _, st in ipairs(stabs) do
+      for _, nm in ipairs(ch) do
+        synth(pumped, n, at(bar, st[1]), six * 1.4, freq(nm), {
+          wave = "saw", voices = 3, detune = 12, vol = 0.07 * st[2],
+          cut = stabCut * 1.6, cutEnd = stabCut, sweep = 0.06, release = 0.04,
+        })
+      end
+    end
+
+    -- the bass
+    local root = freq(ch.root)
+    for step = 0, 15 do
+      local b = BASS[step + 1]
+      if b then
+        local f = root * SEMITONE ^ b[1]
+        synth(bass, n, at(bar, step), six * b[3] * 0.85, f, {
+          wave = "saw", voices = 2, detune = 5, vol = 0.36 * b[2],
+          cut = full and 1900 or 900, cutEnd = 300, sweep = 0.07, release = 0.02 })
+        synth(bass, n, at(bar, step), six * b[3] * 0.85, f,            -- a clean sub under it
+              { wave = "sine", vol = 0.22 * b[2], release = 0.02 })
+      end
+    end
+
+    -- drums
+    for b = 0, 3 do drum(dry, n, bar * 4 * beat + b * beat, "kick", full and 1 or 0.7) end
+    if full then
+      clap(send, n, at(bar, 4), 0.55)
+      clap(send, n, at(bar, 12), 0.55)
+      if bar % 4 == 3 then clap(send, n, at(bar, 15), 0.3) end        -- a flam into the next
+    end
+    for step = 0, 15 do
+      if step % 4 == 2 then
+        drum(dry, n, at(bar, step), "open", full and 0.12 or 0.07)    -- the "tss"
+      elseif full then
+        drum(dry, n, at(bar, step), "hat", step % 2 == 1 and 0.07 or 0.045)
+      end
     end
   end
 
-  -- echo on the lead and the arpeggio (a dotted eighth), then everything wet into the room
-  local gap = math.floor(beat * 0.75 * RATE)
-  echo(lead, send, n, gap, 3, drums and 0.32 or 0.4)
+  -- the lead
+  talkbox(lead, n, parseMelody(spec.melody), beat, full and 0.2 or 0.09)
+
+  -- everything but the kick and hats pumps with the kick
+  local per = math.floor(beat * RATE)
+  for i = 1, n do
+    local since = ((i - 1) % per) / RATE
+    pumped[i] = pumped[i] * (1 - 0.55 * math.exp(-since * 10))
+    bass[i] = bass[i] * (1 - 0.3 * math.exp(-since * 14))
+    lead[i] = lead[i] * (1 - 0.25 * math.exp(-since * 10))
+  end
+
+  -- a short echo on the lead, a little room on everything that is not the low end
+  echo(lead, send, n, math.floor(beat * 0.75 * RATE), 2, 0.22)
   local wet = buffer(n)
-  for i = 1, n do wet[i] = send[i] + lead[i] * 0.6 + ducked[i] * 0.35 end
-  local room = reverb(wet, n, drums and 1.0 or 1.3, 0.35)
+  for i = 1, n do wet[i] = send[i] + lead[i] * 0.35 + pumped[i] * 0.3 end
+  local room = reverb(wet, n, 0.8, 0.45)
 
   local mix = buffer(n)
-  local roomAmt = drums and 0.55 or 0.9
   for i = 1, n do
-    mix[i] = ducked[i] + dry[i] + send[i] + lead[i] + room[i] * roomAmt
+    mix[i] = pumped[i] + bass[i] + dry[i] + send[i] + lead[i] + room[i] * 0.3
   end
   -- level it: a gentle squash so the loud moments stay round, then the peak at 0.85
   local peak = 0
   for i = 1, n do
-    local v = mix[i] * 1.4
-    v = v / (1 + math.abs(v) * 0.35)
+    local v = mix[i] * 1.3
+    v = v / (1 + math.abs(v) * 0.3)
     mix[i] = v
     local a = math.abs(v); if a > peak then peak = a end
   end
