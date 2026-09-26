@@ -1,4 +1,4 @@
--- Flap : a flapping game for a cocktail table, played a turn each.
+-- Flappy Bird : a flapping game for a cocktail table, played a turn each.
 --
 -- One player flies at a time and gets the WHOLE screen. When it is player 2's turn the
 -- whole picture turns round to face their seat, the way a cocktail table is meant to
@@ -167,9 +167,36 @@ local function hash(n, salt)
   return x - math.floor(x)
 end
 
+-- EXTRAS: some gaps drift up and down from the sixth pipe on; how far (0 = still)
+local function driftAmp(n)
+  if not S.extras or n < 6 then return 0 end
+  local r = hash(n, 9.1)
+  if r > 0.45 then return 0 end
+  return 6 + (r / 0.45) * 6
+end
+
+-- The nth pipe's hole, from the seed alone, so every turn flies the same run. Each hole is
+-- placed from the one before: between two pipes there is only about 0.8 s, which is about
+-- 60 px of climbing flapping flat out, and big drops are just as tight (a flap on the way
+-- out of a pipe eats the time needed to fall). Holes drawn anywhere at random asked for
+-- climbs of up to 186 px. Checked with FLAP_TEST=fair: a simple auto-pilot now gets through
+-- 37 of 40 courses to pipe 60; on the old holes it crashed on all 40 by the fourth pipe.
+local CLIMB, DROP = 50, 55
+local tops = {}
 local function gapFor(n)
-  -- the nth pipe's hole, from the seed alone, so every turn flies the same run
-  return 34 + hash(n, 1) * (GROUND_Y - GAP - 70)
+  if tops.seed ~= S.seed or tops.extras ~= S.extras then
+    tops = { seed = S.seed, extras = S.extras }
+  end
+  if tops[n] then return tops[n] end
+  local lo, hi = 34, GROUND_Y - GAP - 36
+  local top = lo + hash(n, 1) * (hi - lo)
+  if n > 1 then
+    local prev = gapFor(n - 1)
+    local wobble = driftAmp(n) + driftAmp(n - 1)       -- a drifting hole needs slack
+    top = math.max(prev - (CLIMB - wobble), math.min(prev + (DROP - wobble), top))
+  end
+  tops[n] = top
+  return top
 end
 
 -- EXTRAS. All of it comes from the seed too, so both players meet the same coins,
@@ -182,13 +209,12 @@ local function itemFor(n)
   return nil
 end
 
--- from the sixth pipe on, some gaps drift up and down while you fly at them
+-- from the sixth pipe on, some gaps drift up and down while you fly at them: gently, so a
+-- hole never closes on a bird already inside it (it used to move up to 40 px)
 local function driftFor(n)
-  if not S.extras or n < 6 then return 0 end
-  local r = hash(n, 9.1)
-  if r > 0.45 then return 0 end
-  local amp = 10 + r * 30
-  return math.sin(S.run / SPEED * 1.6 + n * 1.3) * amp
+  local amp = driftAmp(n)
+  if amp == 0 then return 0 end
+  return math.sin(S.run / SPEED * 1.3 + n * 1.3) * amp
 end
 
 local function newBird(p)
@@ -370,7 +396,7 @@ local function step(dt)
             b.score = b.score + 1
             b.coins = b.coins + 1
             play("coin")
-            S.pops[#S.pops + 1] = { x = ix, y = iy, t = 0, text = "+1", c = { 1, 0.9, 0.3 } }
+            S.pops[#S.pops + 1] = { x = ix, y = iy, t = 0, text = "+1", c = { 1, 0.88, 0.25 } }
           else
             b.shield = true
             play("shield")
@@ -494,13 +520,15 @@ local function drawWorld()
           g.setColor(1, 0.97, 0.7)
           g.rectangle("fill", ix - math.min(2, w - 1), iy - 4, 1.5, 4)
         else
-          local r = 6 + math.sin(S.t * 5) * 0.8
-          g.setColor(0.5, 0.95, 1, 0.3)
+          local r = 7 + math.sin(S.t * 5) * 0.8
+          g.setColor(0.5, 0.95, 1, 0.25)
+          g.circle("fill", ix, iy, r + 3)                                      -- a glow
+          g.setColor(0.3, 0.8, 1, 0.55)
           g.circle("fill", ix, iy, r)
-          g.setColor(0.6, 1, 1, 0.9)
+          g.setColor(0.85, 1, 1)
           g.circle("line", ix, iy, r)
-          g.setColor(1, 1, 1, 0.9)
-          g.rectangle("fill", ix - 3, iy - 3, 2, 2)
+          g.setColor(1, 1, 1)
+          g.rectangle("fill", ix - 4, iy - 4, 2, 2)
         end
       end
     end
@@ -521,25 +549,30 @@ local function drawWorld()
     end
   end
   for _, pp in ipairs(S.pops) do
-    local a = 1 - pp.t / 0.9
-    g.setColor(0, 0, 0, 0.5 * a)
-    g.print(pp.text, math.floor(pp.x - font:getWidth(pp.text) / 2) + 1, math.floor(pp.y) + 1)
+    -- outlined all round, like the score, so it reads against sky and pipes alike
+    local a = 1 - math.max(0, pp.t - 0.5) / 0.4
+    local x, y = math.floor(pp.x - (font:getWidth(pp.text) - 1) / 2), math.floor(pp.y)
+    g.setColor(0.1, 0.08, 0.15, 0.85 * a)
+    for dx = -1, 1 do for dy = -1, 1 do
+      if dx ~= 0 or dy ~= 0 then g.print(pp.text, x + dx, y + dy) end
+    end end
     g.setColor(pp.c[1], pp.c[2], pp.c[3], a)
-    g.print(pp.text, math.floor(pp.x - font:getWidth(pp.text) / 2), math.floor(pp.y))
+    g.print(pp.text, x, y)
   end
 end
 
 local function drawFront()
   local mid = VIEW_W / 2
   if S.state == "title" or S.state == "choose" then
-    panel(mid - 70, 78, 140, 64)
-    shadowText("FLAP", mid, 84, { 0.95, 0.72, 0.15 }, 3)
-    text("A TURN EACH", mid, 112, { 0.35, 0.32, 0.28 })
-    text("BEST  " .. S.best, mid, 124, { 0.45, 0.42, 0.36 })
+    panel(mid - 84, 66, 168, 84)
+    shadowText("FLAPPY", mid, 72, { 0.95, 0.72, 0.15 }, 3)
+    shadowText("BIRD", mid, 98, { 0.95, 0.72, 0.15 }, 2)
+    text("A TURN EACH", mid, 120, { 0.35, 0.32, 0.28 })
+    text("BEST  " .. S.best, mid, 132, { 0.45, 0.42, 0.36 })
     L.bird(mid, 170 + math.sin(S.t * 4) * 6, math.sin(S.t * 4) * 0.25,
            (math.floor(S.t * 8) % 3) + 1, BIRD_COLOURS[1])
     if S.state == "choose" then
-      panel(mid - 80, 200, 160, 44)
+      panel(mid - 104, 200, 208, 44)
       text("STARTING ON YOUR OWN", mid, 206, { 0.35, 0.32, 0.28 })
       text("OTHER SEAT PRESS TO JOIN", mid, 218, { 0.55, 0.35, 0.20 })
       text(string.format("%d", math.max(0, math.ceil(4 - (S.waitT or 0)))), mid, 230, { 0.35, 0.32, 0.28 })
@@ -577,10 +610,10 @@ local function drawFront()
     end
   elseif S.state == "over" then
     if S.players == 1 then
-      panel(mid - 78, 112, 156, 78)
+      panel(mid - 90, 112, 180, 78)
       text("GAME OVER", mid, 118, { 0.85, 0.35, 0.20 }, 2)
       local m = medalFor(S.bestRun[S.turn])
-      if m then L.medal(m, mid - 52, 156) end
+      if m then L.medal(m, mid - 60, 156) end
       text("SCORE", mid + 8, 142, { 0.45, 0.42, 0.36 })
       text(tostring(S.bestRun[S.turn]), mid + 8, 152, { 0.25, 0.22, 0.20 }, 2)
       text("BEST " .. S.best, mid + 8, 172, { 0.45, 0.42, 0.36 })
@@ -648,6 +681,85 @@ function love.load()
   music.play("title", 0.4)
   if not os.getenv("FLAP_WINDOW") then love.window.setFullscreen(true, "desktop") end
   love.mouse.setVisible(false)
+  -- a picture of one screen, for checking how everything looks:
+  --   FLAP_SHOT=title | titleoff | choose | ready | play | shield | saved | crashed |
+  --             between | ready2 | over1 | over2
+  local shot = os.getenv("FLAP_SHOT")
+  if shot then
+    love.audio.setVolume(0)
+    S.seed = 4242
+    S.extras = shot ~= "titleoff"
+    local function flying(players, turn, run, score)
+      startGame(players, 1)
+      S.seed = 4242
+      S.turn = turn
+      S.state = "play"
+      S.run, S.scroll = run, run
+      local b = S.bird
+      b.p = turn
+      b.score = score
+      for _, pipe in ipairs(pipesNear(S.run)) do        -- sit the bird in the next hole
+        if pipe.x + L.PIPE_W + 9 > b.x then b.y = pipe.top + GAP / 2; break end
+      end
+      b.vy, b.tilt = -40, -0.2
+      return b
+    end
+    if shot == "choose" then S.state, S.chooser, S.waitT = "choose", 1, 1.2
+    elseif shot == "ready" then startGame(1, 1)
+    elseif shot == "ready2" then startGame(2, 1); S.turn = 2; beginTurn(); S.round = 2
+    elseif shot == "play" then flying(1, 1, 420, 7)
+    elseif shot == "shield" then flying(1, 1, 600, 12).shield = true
+    elseif shot == "saved" then
+      local b = flying(1, 1, 600, 12)
+      b.safe = 0.6
+      S.pops = { { x = b.x, y = b.y - 14, t = 0.2, text = "SAVED!", c = { 0.5, 0.95, 1 } } }
+    elseif shot == "crashed" then
+      local b = flying(1, 1, 420, 7)
+      b.alive, S.state, b.tilt = false, "crashed", 1.2
+    elseif shot == "between" then
+      startGame(2, 1); S.totals = { 14, 0 }; S.turn = 2; S.state = "between"; S.timer = 2
+    elseif shot == "over1" then
+      startGame(1, 1); S.bestRun = { 23, 0 }; S.best = 31; S.state = "over"; S.timer = 3
+    elseif shot == "over2" then
+      startGame(2, 1); S.totals = { 42, 37 }; S.state = "over"; S.timer = 3
+    end
+    S.freeze = true
+    S.shots = { 0.12 }
+    return
+  end
+  if os.getenv("FLAP_TEST") == "fair" then
+    -- is every course flyable? A careful auto-pilot flies 40 courses (EXTRAS on) to pipe
+    -- 60 each; it reports where it crashed and the biggest climb it was asked for
+    love.audio.setVolume(0)
+    local crashes, worst, lines = 0, 0, {}
+    for run = 1, 40 do
+      S.extras = true
+      startGame(1, 1)
+      S.state = "play"
+      local b = S.bird
+      local steps = 0
+      while S.state == "play" and b.score < 60 + b.coins and steps < 60 * 400 do
+        steps = steps + 1
+        -- aim at the hole it is in or coming to, flap to hold the middle of it
+        local aim = VIEW_H * 0.45
+        for _, pipe in ipairs(pipesNear(S.run)) do
+          if pipe.x + L.PIPE_W + 9 > b.x then aim = pipe.top + GAP * 0.5; break end
+        end
+        if b.y > aim + 6 and b.vy > 0 then pressed["space"] = true end
+        love.update(1 / 60)
+      end
+      for n = 2, 60 do worst = math.max(worst, gapFor(n - 1) - gapFor(n)) end
+      if S.state ~= "play" then
+        crashes = crashes + 1
+        lines[#lines + 1] = ("  course %d: crashed at pipe %d"):format(run, b.score - b.coins + 1)
+      end
+    end
+    lines[#lines + 1] = ("%d of 40 courses crashed; the biggest climb asked for was %d px")
+      :format(crashes, math.floor(worst + 0.5))
+    print(table.concat(lines, "\n"))
+    love.event.quit()
+    return
+  end
   if os.getenv("FLAP_TEST") then
     S.shots = { 2, 6, 11, 17, 24 }
     startGame(2, 1)
@@ -672,12 +784,18 @@ function love.update(dt)
       pressed[flapKey] = true
     end
   end
-  realUpdate(dt)
+  if S.freeze then
+    S.t = S.t + dt               -- a screen held still for its picture (FLAP_SHOT)
+  else
+    realUpdate(dt)
+  end
   if S.shots then
     S.shotT = (S.shotT or 0) + dt
     if S.shots[1] and S.shotT >= S.shots[1] then
       table.remove(S.shots, 1)
-      g.captureScreenshot("flap" .. math.floor(S.shotT) .. ".png")
+      local name = os.getenv("FLAP_SHOT") and ("shot_" .. os.getenv("FLAP_SHOT"))
+                   or ("flap" .. math.floor(S.shotT))
+      g.captureScreenshot(name .. ".png")
     end
     if #S.shots == 0 then love.event.quit() end
   end

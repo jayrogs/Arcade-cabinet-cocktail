@@ -458,7 +458,7 @@ local function buildSystems()
   local flap = HOME .. "/flap.love"
   if fileExists(flap) then
     menu[#menu + 1] = {
-      label = "FLAP", short = "FLAP", tag = "1 OR 2 PLAYERS",
+      label = "FLAPPY BIRD", short = "FLAPPY", tag = "1 OR 2 PLAYERS",
       color = { 0.24, 0.62, 0.88 }, run = "love " .. shellQuote(flap), pic = "flap",
     }
   end
