@@ -38,9 +38,12 @@ lives where on it. Read both first.
   Named_Boxarts (max 512px wide) for 540 games; the title screens they replaced are in
   each set's `media/titles/`. The menu draws at `DETAIL` x its 256x320 layout (3x on the
   cabinet) so pictures keep their detail; before, they were squashed to 256x320 first.
-- **Pong's music** is synthwave (`games/Pong/music.lua`, Sept 25): 16-bar D-minor game tune
-  (118 BPM, sidechained saw bass, detuned pads, arpeggio, reverb) and an ambient 8-bar
-  title tune. Built at first launch and cached as a .wav in the save folder (VERSION).
+- **Pong's music** plays files from `~/roms/music/pong` (`\cabinet\games\music\pong`):
+  a name containing "title" on the title screen, anything else in games (random each game).
+  In there now: two CC-BY loops by Tomasz Kucza and CC0 "Starlight City" (see its
+  CREDITS.txt). With the folder empty, the built-in French-house tunes in
+  `games/Pong/music.lua` play instead (built once, cached as .wav in the save folder).
+  Claude won't download commercial soundtracks (Tetris etc.); Jay can drop his own in.
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.

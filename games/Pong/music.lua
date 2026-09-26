@@ -430,7 +430,53 @@ local function cached(name)
 end
 
 local made, raw = {}, {}
-local playing = nil
+local playing, playingName = nil, nil
+
+-- ------------------------------------------------------------------ your own music
+-- Any .mp3 / .ogg / .wav dropped into roms/music/pong on the cabinet (\\cabinet\games\
+-- music\pong from a PC) plays instead of the tunes built here: a name with "title" in it
+-- on the title screen, anything else during games (one picked at random each game).
+-- LOVE's own filesystem cannot see outside the game, so a file is read as bytes.
+local FOLDER = (os.getenv("HOME") or ".") .. "/roms/music/pong"
+local found, streams = nil, {}
+
+local function ownFiles()
+  if found then return found end
+  found = { title = {}, play = {} }
+  local pipe = io.popen("find '" .. FOLDER .. "' -maxdepth 1 -type f 2>/dev/null")
+  if pipe then
+    for path in pipe:lines() do
+      local lower = path:lower()
+      if lower:match("%.mp3$") or lower:match("%.ogg$") or lower:match("%.wav$") then
+        local name = lower:match("[^/]+$")
+        local list = name:find("title") and found.title or found.play
+        list[#list + 1] = path
+      end
+    end
+    pipe:close()
+  end
+  table.sort(found.title); table.sort(found.play)
+  return found
+end
+
+local function streamFor(path)
+  if streams[path] == nil then
+    streams[path] = false
+    local f = io.open(path, "rb")
+    if f then
+      local bytes = f:read("*a")
+      f:close()
+      local ok, src = pcall(function()
+        return love.audio.newSource(love.filesystem.newFileData(bytes, path:match("[^/]+$")), "stream")
+      end)
+      if ok and src then
+        src:setLooping(true)
+        streams[path] = src
+      end
+    end
+  end
+  return streams[path] or nil
+end
 
 function M.load(name)
   if not made[name] then
@@ -450,18 +496,26 @@ end
 function M.build(name) return build(TUNES[name]) end
 
 function M.play(name, volume)
-  if playing == made[name] and playing and playing:isPlaying() then return end
+  if playingName == name and playing and playing:isPlaying() then return end
   M.stop()
-  local s = M.load(name)
+  local list = ownFiles()[name]
+  local s
+  if list and #list > 0 then
+    local path = list[love.math.random(#list)]
+    s = streamFor(path)
+    print(s and ("pong music: " .. path) or ("pong music: could not play " .. path))
+    io.stdout:flush()
+  end
+  s = s or M.load(name)                         -- no file of your own: the built-in tune
   s:setVolume(volume or 0.5)
   s:seek(0)
   s:play()
-  playing = s
+  playing, playingName = s, name
 end
 
 function M.stop()
   if playing then playing:stop() end
-  playing = nil
+  playing, playingName = nil, nil
 end
 
 function M.duck(v)              -- quieten under a win jingle, say
