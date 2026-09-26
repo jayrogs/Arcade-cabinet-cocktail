@@ -18,6 +18,18 @@ lives where on it. Read both first.
   menu touches `/tmp/cab_alive` every 2s and a menu silent for 30s is restarted, with a
   gdb trace saved as `/tmp/menu_freeze_*.txt` first. Read those traces to find the real
   cause (`/tmp` is cleared on reboot, so check before restarting the Pi).
+- **Buttons (Sept 25, tested):** the 3H board sends buttons 1-4 as 0-3, Player 1/2 start
+  as 7 (each half), player 1's side button as 9 (BTN_BASE4) and player 2's side button as
+  8 (BTN_BASE3; rewired from the service pin, which the board ignores, to P2 coin).
+  - Arcade games: `autoconfig/udev/3H Dual Arcade 3H Dual Arcade.cfg` on the Pi maps
+    b/a/y/x = 0/1/2/3, start = 7, select (coin) = 9. **P1 side button = coin.**
+  - Per-emulator overrides in `~/.config/retroarch/config/<core>/<core>.cfg` (FBNeo, MAME,
+    MAME 2003-Plus, MAME 2010, Flycast) turn off RetroArch's start+select quit combo and
+    its quit-on-button-9, so neither can end a game.
+  - **P2 side button:** tap = same game again, hold = back to the shelf (`cabside.py`,
+    with `cab.sh` acting on `/tmp/cab_again`). The phone pads keep their own button 10.
+  - The menu's "SET UP THE BUTTONS" tool rewrites that autoconfig file from whatever is
+    pressed; a careless run is what broke it before. Don't run it without updating it.
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.
 - Project moved to a second Claude account; this file replaces the old chat history.
