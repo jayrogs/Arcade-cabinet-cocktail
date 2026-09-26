@@ -1316,7 +1316,8 @@ function love.load(args)
     for _ = 1, 500 do tick({ G.ai[1]:input(), G.ai[2]:input() }) if G.state ~= "play" then break end end
     G.state, G.pauseSel = "paused", 2
   elseif shotMode == "cpuselect" then
-    G.settings = { { level = 5, speed = "low" }, { level = 5, speed = "med" } }
+    -- the computer always has player 1's level and speed, so the picture shows that
+    G.settings = { { level = 5, speed = "low" }, { level = 5, speed = "low" } }
     G.cpuSkill = "impossible"
     beginGame(3)
     G.cursor = { 0, 1 }

@@ -1385,7 +1385,11 @@ function R.drawSelect(region, sel, t)
   local function Y(v) return top + math.floor(v * sy) end
   local versus = sel.mode == "versus"
   local rows = { [0] = false, false, false, false }
-  for p = 1, (versus and 2 or 1) do rows[sel.cursor[p]] = true end
+  -- only a person's cursor lights a row: the computer's sat on VIRUS LEVEL and lit it
+  -- alongside whichever row player 1 was really on
+  for p = 1, (versus and 2 or 1) do
+    if not (sel.cpu and sel.cpu[p]) then rows[sel.cursor[p]] = true end
+  end
   local hint = rows[ROW_LEVEL] and ROW_LEVEL or (rows[ROW_SPEED] and ROW_SPEED or ROW_MUSIC)
 
   local cpu = sel.cpu and sel.cpu[2]
@@ -1463,7 +1467,9 @@ function R.drawSelect(region, sel, t)
     for i, name in ipairs(MUSIC_ORDER) do
       local str = MUSIC_LABELS[name]
       local mxx = narrow and left or (left + (i == 1 and 0 or (i == 2 and slots[1] or slots[1] + slots[2])))
-      local myy = narrow and (my + (i - 1) * 11) or my
+      -- 18 apart when stacked: the frame round the chosen word is 18 tall, and at 11
+      -- apart it sat on top of the word below it
+      local myy = narrow and (my + (i - 1) * 18) or my
       if sel.musicType == name then
         g.setColor(1, 1, 1)
         g.draw(boxes[i], mxx, myy - 5)
