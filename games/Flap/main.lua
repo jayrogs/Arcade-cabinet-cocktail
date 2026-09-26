@@ -68,6 +68,9 @@ local function makeSounds()
   sfx.hit = tone(120, 0.26, "hit", 0.6)
   sfx.fall = tone(340, 0.45, "fall", 0.4)
   sfx.menu = tone(520, 0.06, "point", 0.25)
+  sfx.coin = tone(1320, 0.1, "point", 0.22)            -- EXTRAS: a bright ping
+  sfx.shield = tone(440, 0.3, "flap", 0.4)             -- a rising whoosh
+  sfx.pop = tone(260, 0.22, "hit", 0.45)               -- the shield bursting
 end
 
 local function play(name)
@@ -97,11 +100,22 @@ local function padsFor(p)
   return out
 end
 
-local function flapPressed(p)
+local shoved = {}          -- stick shoves this frame, by joystick object
+
+-- buttonsOnly: leave the stick out (on the title the stick changes EXTRAS instead)
+local function flapPressed(p, buttonsOnly)
   for _, k in ipairs(KEYS[p].flap) do if pressed[k] then return true end end
   for _, k in ipairs(KEYS[p].start) do if pressed[k] then return true end end
   for _, js in ipairs(padsFor(p)) do
-    if jsPressed[js] then return true end
+    if jsPressed[js] or (shoved[js] and not buttonsOnly) then return true end
+  end
+  return false
+end
+
+local function stickShoved(p)
+  if pressed[p == 1 and "left" or "j"] or pressed[p == 1 and "right" or "l"] then return true end
+  for _, js in ipairs(padsFor(p)) do
+    if shoved[js] then return true end
   end
   return false
 end
@@ -119,13 +133,13 @@ function love.joystickaxis(js, axis, v)
   local far = math.max(math.abs(s[1]), math.abs(s[2]))
   if far > 0.5 and not s.out then
     s.out = true
-    jsPressed[js] = true
+    shoved[js] = true
   elseif far < 0.3 then
     s.out = false
   end
 end
 function love.joystickhat(js, h, v)
-  if v ~= "c" then jsPressed[js] = true end
+  if v ~= "c" then shoved[js] = true end
 end
 function love.keypressed(k)
   if k == "escape" then love.event.quit() end
@@ -143,13 +157,38 @@ local S = {
   totals = { 0, 0 }, bestRun = { 0, 0 },
   bird = nil, best = 0,
   shake = 0, flash = 0, timer = 0,
+  extras = true,            -- coins, shields and drifting pipes (the stick on the title)
+  pops = {},                -- "+1" and the like, floating up and fading
 }
+
+-- a number 0..1 for pipe n, from the seed alone; salt picks a different one per use
+local function hash(n, salt)
+  local x = math.sin(n * 12.9898 * salt + S.seed * 78.233) * 43758.5453
+  return x - math.floor(x)
+end
 
 local function gapFor(n)
   -- the nth pipe's hole, from the seed alone, so every turn flies the same run
-  local x = math.sin(n * 12.9898 + S.seed * 78.233) * 43758.5453
-  local r = x - math.floor(x)
-  return 34 + r * (GROUND_Y - GAP - 70)
+  return 34 + hash(n, 1) * (GROUND_Y - GAP - 70)
+end
+
+-- EXTRAS. All of it comes from the seed too, so both players meet the same coins,
+-- shields and drifting pipes in the same places.
+local function itemFor(n)
+  if not S.extras or n < 2 then return nil end
+  local r = hash(n, 3.7)
+  if n >= 4 and r < 0.09 then return "shield" end      -- rare: survive one crash
+  if r < 0.6 then return "coin" end                    -- a bonus point in the gap
+  return nil
+end
+
+-- from the sixth pipe on, some gaps drift up and down while you fly at them
+local function driftFor(n)
+  if not S.extras or n < 6 then return 0 end
+  local r = hash(n, 9.1)
+  if r > 0.45 then return 0 end
+  local amp = 10 + r * 30
+  return math.sin(S.run / SPEED * 1.6 + n * 1.3) * amp
 end
 
 local function newBird(p)
@@ -157,6 +196,7 @@ local function newBird(p)
     p = p, x = 62, y = VIEW_H * 0.42, vy = 0,
     tilt = 0, flap = 1, flapT = 0,
     alive = true, score = 0, feathers = {}, landed = false, passed = {},
+    got = {}, coins = 0, shield = false, safe = 0,
   }
 end
 
@@ -164,6 +204,7 @@ local function beginTurn()
   S.scroll = 0
   S.run = 0
   S.bird = newBird(S.turn)
+  S.pops = {}
   S.state = "ready"
   S.timer = 0
 end
@@ -198,7 +239,9 @@ local function pipesNear(run)
   local out = {}
   local first = math.max(1, math.floor((run - PIPE_START - L.PIPE_W) / PIPE_EVERY) + 1)
   for n = first, first + math.ceil(VIEW_W / PIPE_EVERY) + 2 do
-    out[#out + 1] = { n = n, x = PIPE_START + (n - 1) * PIPE_EVERY - run, top = gapFor(n) }
+    local top = math.max(18, math.min(GROUND_Y - GAP - 18, gapFor(n) + driftFor(n)))
+    out[#out + 1] = { n = n, x = PIPE_START + (n - 1) * PIPE_EVERY - run, top = top,
+                      item = itemFor(n) }
   end
   return out
 end
@@ -252,18 +295,30 @@ local function endTurn()
 end
 
 -- ------------------------------------------------------------------ update
-function love.update(dt)
+local function step(dt)
   dt = math.min(dt, 1 / 30)
   S.t = S.t + dt
   S.shake = math.max(0, S.shake - dt)
   S.flash = math.max(0, S.flash - dt)
   S.timer = S.timer + dt
+  for i = #S.pops, 1, -1 do
+    local pp = S.pops[i]
+    pp.t = pp.t + dt
+    pp.y = pp.y - 18 * dt
+    if pp.t > 0.9 then table.remove(S.pops, i) end
+  end
 
   if S.state == "title" then
     S.idle = S.idle + dt
     S.scroll = S.scroll + SPEED * 0.35 * dt
     for p = 1, 2 do
-      if flapPressed(p) then
+      -- the stick switches EXTRAS on and off; a button starts
+      if stickShoved(p) then
+        S.extras = not S.extras
+        love.filesystem.write("extras.txt", S.extras and "on" or "off")
+        play("menu")
+      end
+      if flapPressed(p, true) then
         play("menu")
         S.chooser = p
         S.waitT = 0
@@ -306,8 +361,42 @@ function love.update(dt)
         b.score = b.score + 1
         play("point")
       end
+      -- EXTRAS: the coin or shield sitting in the middle of the gap
+      if pipe.item and not b.got[pipe.n] then
+        local ix, iy = pipe.x + L.PIPE_W / 2, pipe.top + GAP / 2
+        if math.abs(b.x - ix) < 10 and math.abs(b.y - iy) < 11 then
+          b.got[pipe.n] = true
+          if pipe.item == "coin" then
+            b.score = b.score + 1
+            b.coins = b.coins + 1
+            play("coin")
+            S.pops[#S.pops + 1] = { x = ix, y = iy, t = 0, text = "+1", c = { 1, 0.9, 0.3 } }
+          else
+            b.shield = true
+            play("shield")
+            S.pops[#S.pops + 1] = { x = ix, y = iy, t = 0, text = "SHIELD", c = { 0.5, 0.95, 1 } }
+          end
+        end
+      end
     end
-    if hits(b, pipes) then
+    b.safe = math.max(0, b.safe - dt)
+    local hit = hits(b, pipes)
+    if hit and b.safe > 0 then
+      -- just saved by a shield: pipes pass through for a moment, the ground bounces
+      if hit == "ground" then b.y = GROUND_Y - 6; b.vy = FLAP end
+      hit = nil
+    elseif hit and b.shield then
+      b.shield = false
+      b.safe = 1.0
+      b.vy = FLAP
+      S.shake = 0.12
+      play("pop")
+      feathers(b, 10, { 0.5, 0.95, 1 })
+      S.pops[#S.pops + 1] = { x = b.x, y = b.y - 8, t = 0, text = "SAVED!", c = { 0.5, 0.95, 1 } }
+      if hit == "ground" then b.y = GROUND_Y - 6 end
+      hit = nil
+    end
+    if hit then
       b.alive = false
       S.shake = 0.25
       S.flash = 0.25
@@ -340,7 +429,13 @@ function love.update(dt)
       music.play("title", 0.4)
     end
   end
-  pressed, jsPressed = {}, {}
+  pressed, jsPressed, shoved = {}, {}, {}
+end
+
+-- the presses are used up every frame, however step() ended (several ways return early)
+function love.update(dt)
+  step(dt)
+  pressed, jsPressed, shoved = {}, {}, {}
 end
 
 -- ------------------------------------------------------------------ drawing
@@ -385,12 +480,52 @@ local function drawWorld()
   if playing then
     for _, pipe in ipairs(pipesNear(S.run)) do
       L.pipe(pipe.x, pipe.top, GAP, night)
+      -- EXTRAS: a coin or a shield bubble in the middle of the gap, until it is taken
+      if pipe.item and S.bird and not S.bird.got[pipe.n] and S.state ~= "between" then
+        local ix, iy = pipe.x + L.PIPE_W / 2, pipe.top + GAP / 2 + math.sin(S.t * 3 + pipe.n) * 2
+        if pipe.item == "coin" then
+          local w = math.max(1.5, math.abs(math.cos(S.t * 4 + pipe.n)) * 7)   -- spinning
+          g.setColor(1, 0.85, 0.3, 0.25)
+          g.circle("fill", ix, iy, 10)                                          -- a glow
+          g.setColor(0.55, 0.35, 0.05)
+          g.ellipse("fill", ix + 1, iy + 1, w, 7)
+          g.setColor(1, 0.82, 0.2)
+          g.ellipse("fill", ix, iy, w, 7)
+          g.setColor(1, 0.97, 0.7)
+          g.rectangle("fill", ix - math.min(2, w - 1), iy - 4, 1.5, 4)
+        else
+          local r = 6 + math.sin(S.t * 5) * 0.8
+          g.setColor(0.5, 0.95, 1, 0.3)
+          g.circle("fill", ix, iy, r)
+          g.setColor(0.6, 1, 1, 0.9)
+          g.circle("line", ix, iy, r)
+          g.setColor(1, 1, 1, 0.9)
+          g.rectangle("fill", ix - 3, iy - 3, 2, 2)
+        end
+      end
     end
   end
   L.ground(S.scroll, night)
   if S.bird and playing and S.state ~= "between" then
-    for _, f in ipairs(S.bird.feathers) do L.feather(f) end
-    L.bird(S.bird.x, S.bird.y, S.bird.tilt, S.bird.flap, BIRD_COLOURS[S.turn], not S.bird.alive)
+    local b = S.bird
+    for _, f in ipairs(b.feathers) do L.feather(f) end
+    -- just saved by a shield: the bird blinks while it cannot be hurt
+    if b.safe <= 0 or math.floor(S.t * 12) % 2 == 0 then
+      L.bird(b.x, b.y, b.tilt, b.flap, BIRD_COLOURS[S.turn], not b.alive)
+    end
+    if b.shield and b.alive then
+      g.setColor(0.5, 0.95, 1, 0.18 + 0.08 * math.sin(S.t * 6))
+      g.circle("fill", b.x, b.y, 11)
+      g.setColor(0.6, 1, 1, 0.8)
+      g.circle("line", b.x, b.y, 11)
+    end
+  end
+  for _, pp in ipairs(S.pops) do
+    local a = 1 - pp.t / 0.9
+    g.setColor(0, 0, 0, 0.5 * a)
+    g.print(pp.text, math.floor(pp.x - font:getWidth(pp.text) / 2) + 1, math.floor(pp.y) + 1)
+    g.setColor(pp.c[1], pp.c[2], pp.c[3], a)
+    g.print(pp.text, math.floor(pp.x - font:getWidth(pp.text) / 2), math.floor(pp.y))
   end
 end
 
@@ -408,8 +543,15 @@ local function drawFront()
       text("STARTING ON YOUR OWN", mid, 206, { 0.35, 0.32, 0.28 })
       text("OTHER SEAT PRESS TO JOIN", mid, 218, { 0.55, 0.35, 0.20 })
       text(string.format("%d", math.max(0, math.ceil(4 - (S.waitT or 0)))), mid, 230, { 0.35, 0.32, 0.28 })
-    elseif math.floor(S.t * 2) % 2 == 0 then
-      shadowText("PRESS A BUTTON", mid, 252, { 1, 1, 1 })
+    else
+      -- EXTRAS on or off, changed with the stick
+      panel(mid - 96, 204, 192, 30)
+      local on = S.extras
+      text("< EXTRAS " .. (on and "ON" or "OFF") .. " >", mid, 209, on and { 0.2, 0.55, 0.25 } or { 0.55, 0.35, 0.2 })
+      text(on and "COINS SHIELDS DRIFTING" or "THE CLASSIC GAME", mid, 221, { 0.45, 0.42, 0.36 })
+      if math.floor(S.t * 2) % 2 == 0 then
+        shadowText("PRESS A BUTTON", mid, 252, { 1, 1, 1 })
+      end
     end
   elseif S.state == "ready" then
     shadowText(WHO[S.turn], mid, 60, { 1, 1, 1 }, 2)
@@ -502,6 +644,7 @@ function love.load()
   L.setup(VIEW_W, VIEW_H)
   makeSounds()
   S.best = tonumber(love.filesystem.read("best.txt") or "0") or 0
+  S.extras = (love.filesystem.read("extras.txt") or "on") ~= "off"
   music.play("title", 0.4)
   if not os.getenv("FLAP_WINDOW") then love.window.setFullscreen(true, "desktop") end
   love.mouse.setVisible(false)
