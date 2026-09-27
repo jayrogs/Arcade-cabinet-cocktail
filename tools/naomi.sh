@@ -12,6 +12,7 @@
   R=/home/jayrogs/.config/retroarch
   CFG="$R/flycast.cfg|$R/naomi.cfg"
   [ -f "$R/$NAME.cfg" ] && CFG="$CFG|$R/$NAME.cfg"
+  [ -n "$APPEND_CFG" ] && CFG="$CFG|$APPEND_CFG"      # tablevs.sh adds its own settings
   for try in 1 2 3; do
     retroarch --appendconfig="$CFG" "$@" \
       -L "$R/cores/flycast_libretro.so" "/home/jayrogs/roms/naomi/$NAME.zip" -f &

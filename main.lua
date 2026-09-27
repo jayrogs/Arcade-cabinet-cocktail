@@ -545,7 +545,8 @@ end
 
 local buildGames
 -- FACE TO FACE: games set up so the two players can sit at opposite ends of the table.
---   split: two fields side by side (versus only); tablesplit.glsl turns player 2's half round
+--   split: two fields side by side; once player 2 presses start, tableflip.py turns their
+--          half round (tablesplit_live.glsl), and back when they have gone quiet
 --   naomi-split: the same, for a NAOMI game (started through naomi.sh)
 --   court: one court, player 1 at the left and player 2 at the right (Windjammers); played
 --          from ~/roms_table, whose RetroArch settings turn the picture a quarter and each
@@ -570,13 +571,13 @@ function faceGames()
     local stem = f[2]:match("([^/]+)%.zip$")
     if fileExists(path) then
       local run
+      -- split games start as drawn; tablevs.sh runs tableflip.py beside them, which turns
+      -- player 2's half round only once player 2 presses start (until they go quiet)
+      local tablevs = "sh " .. shellQuote(HOME .. "/tablevs.sh")
       if f[3] == "naomi-split" then
-        -- a NAOMI game: through naomi.sh (Flycast, the lock-up retry), with the same filter
-        run = "sh " .. shellQuote(HOME .. "/naomi.sh") .. " " .. stem .. " --set-shader " ..
-              shellQuote(HOME .. "/.config/retroarch/shaders/tablesplit.glslp")
+        run = tablevs .. " naomi " .. stem           -- a NAOMI game: through naomi.sh
       elseif f[3] == "split" then
-        run = "retroarch --set-shader " .. shellQuote(HOME .. "/.config/retroarch/shaders/tablesplit.glslp") ..
-              " -L " .. core .. " " .. shellQuote(path) .. " -f"
+        run = tablevs .. " retroarch -L " .. core .. " " .. shellQuote(path) .. " -f"
       else
         run = "retroarch -L " .. core .. " " .. shellQuote(HOME .. "/roms_table/" .. stem .. ".zip") .. " -f"
       end
