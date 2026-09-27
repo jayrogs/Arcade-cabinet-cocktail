@@ -4,7 +4,10 @@
 Started beside RetroArch by tablevs.sh. The game starts as it is drawn; the moment player 2
 presses start, RetroArch is told (a network command) to use tablesplit_live.glsl, so player
 2's half faces their seat. Once player 2 has done nothing for QUIET seconds (the match is
-over, or they have gone), it goes back to plain.glsl. Before this, the split was on from the
+over, or they have gone), it goes back to plain.glsl. After player 2 has joined once, any
+button or stick from them turns it round again straight away: between rounds the game can
+sit on its game-over and continue screens long enough to go quiet, and the next round then
+began unflipped until player 2 happened to press start. Before this, the split was on from the
 start and the title and one-player screens looked cut in half.
 
 Player 2 is the second half of the real panel and the phone page's second pad.
@@ -12,7 +15,7 @@ Player 2 is the second half of the real panel and the phone page's second pad.
 import os, select, socket, sys, time
 from evdev import InputDevice, ecodes as e, list_devices
 
-QUIET = 20                      # seconds of nothing from player 2 before the flip goes off
+QUIET = 45                      # seconds of nothing from player 2 before the flip goes off
 PORT = 55355
 SH = "/home/jayrogs/.config/retroarch/shaders/"
 FLIP, PLAIN = SH + "tablesplit_live.glslp", SH + "plain.glslp"
@@ -49,7 +52,7 @@ def main():
     if not devs:
         print("tableflip: no player 2 controls found", flush=True)
         return
-    flipped, last = False, 0.0
+    flipped, joined, last = False, False, 0.0
     while True:
         r, _, _ = select.select(devs, [], [], 1.0)
         now = time.time()
@@ -60,9 +63,10 @@ def main():
                             (ev.type == e.EV_ABS and ev.value != 0)
                     if moved:
                         last = now
-                    if ev.type == e.EV_KEY and ev.value == 1 and ev.code == e.BTN_BASE2 and not flipped:
+                    start = ev.type == e.EV_KEY and ev.value == 1 and ev.code == e.BTN_BASE2
+                    if not flipped and (start or (moved and joined)):
                         tell(FLIP)
-                        flipped = True
+                        flipped = joined = True
             except OSError:
                 pass
         if flipped and now - last > QUIET:
