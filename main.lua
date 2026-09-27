@@ -593,7 +593,7 @@ function faceGames()
       faceList[#faceList + 1] = {
         label = f[1], short = f[1]:sub(1, 6),
         tag = (f[3] == "court") and "THE COURT RUNS ALONG THE TABLE"
-           or (f[3] == "arena") and "BUTTONS SHOOT: LEFT FWD BACK RIGHT"
+           or (f[3] == "arena") and "BUTTON 1 FWD 4 BACK 2 LEFT 3 RIGHT"
            or "EACH HALF FACES ITS PLAYER",
         color = { 0.9, 0.35, 0.24 }, pic = "face_" .. stem, run = run,
       }
