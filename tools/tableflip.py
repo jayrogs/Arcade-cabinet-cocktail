@@ -10,7 +10,9 @@ sit on its game-over and continue screens long enough to go quiet, and the next 
 began unflipped until player 2 happened to press start. Before this, the split was on from the
 start and the title and one-player screens looked cut in half.
 
-Player 2 is the second half of the real panel and the phone page's second pad.
+Player 2 is the second half of the real panel and the phone page's second pad. Their start
+buttons differ: the panel's is its eighth button (BTN_BASE2), the phone pad's its ninth
+(BTN_BASE3; its eighth is the coin), so each device is watched for its own.
 """
 import os, select, socket, sys, time
 from evdev import InputDevice, ecodes as e, list_devices
@@ -52,6 +54,8 @@ def main():
     if not devs:
         print("tableflip: no player 2 controls found", flush=True)
         return
+    global START
+    START = {d.path: (e.BTN_BASE3 if d.name == "Cab Web Panel 2" else e.BTN_BASE2) for d in devs}
     flipped, joined, last = False, False, 0.0
     while True:
         r, _, _ = select.select(devs, [], [], 1.0)
@@ -63,7 +67,7 @@ def main():
                             (ev.type == e.EV_ABS and ev.value != 0)
                     if moved:
                         last = now
-                    start = ev.type == e.EV_KEY and ev.value == 1 and ev.code == e.BTN_BASE2
+                    start = ev.type == e.EV_KEY and ev.value == 1 and ev.code == START.get(d.path)
                     if not flipped and (start or (moved and joined)):
                         tell(FLIP)
                         flipped = joined = True
