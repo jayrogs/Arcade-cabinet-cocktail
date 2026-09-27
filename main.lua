@@ -560,6 +560,10 @@ local FACE = {
   { "TETRIS",                "arcade/fbneo/atetris.zip",   "split" },
   { "WINDJAMMERS",           "arcade/neogeo/wjammers.zip", "court" },
   { "SEGA TETRIS",           "naomi/sgtetris.zip",         "naomi-split" },
+  { "TETRIS GRAND MASTER 2 PLUS", "arcade/fbneo/tgm2p.zip",  "split" },
+  { "TETRIS PLUS 2",         "arcade/fbneo/tetrisp2.zip",  "split" },
+  { "SUPER PUZZLE FIGHTER II TURBO", "arcade/cps2/spf2t.zip", "split" },
+  { "COLUMNS",               "arcade/fbneo/columns.zip",   "split" },
 }
 local faceList
 function faceGames()
