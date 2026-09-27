@@ -316,6 +316,7 @@ def drmario_card():
 
 
 CARDS = [
+    ("facetoface", "VERSUS", (230, 90, 60), "table"),   # the FACE TO FACE shelf
     ("twoplayer",  "2P",       (26, 112, 87),  "table"),
     ("favourites", "STARS",    (184, 133, 15), "star"),
     ("recent",     "AGAIN",    (41, 112, 102), "clock"),

@@ -483,18 +483,18 @@ local function buildSystems()
       run = "sh " .. shellQuote(HOME .. "/monkeyball.sh"),
     }
   end
-  -- Puzzle Bobble 2's versus, set up for the table: a screen filter (tablesplit.glsl) turns
-  -- the right-hand field, player 2's, half round so each player sees their own field the
-  -- right way up. Versus only: in a one-player game it would cut the single field in two,
-  -- so the ordinary Puzzle Bobble 2 on the arcade shelf stays as it was.
-  local pb2 = ROOT .. "/arcade/neogeo/pbobbl2n.zip"
-  if fileExists(pb2) then
+  -- FACE TO FACE: head-to-head games set up for the table (see faceGames)
+  if #faceGames() > 0 then
+    menu[#menu + 1] = { label = "FACE TO FACE", short = "VERSUS", tag = gameCount(#faceGames()),
+                        color = { 0.9, 0.35, 0.24 }, picked = "face", pic = "facetoface" }
+  end
+  -- Sega Tetris (NAOMI, 1999): tools/naomi.sh, Flycast with the retry and naomi.cfg
+  local sgt = ROOT .. "/naomi/sgtetris.zip"
+  if fileExists(sgt) then
     menu[#menu + 1] = {
-      label = "PUZZLE BOBBLE 2 TABLE VERSUS", short = "PB2 VS", tag = "2 PLAYERS FACE TO FACE",
-      color = { 0.2, 0.7, 0.45 }, pic = "pbobble2vs",
-      run = "retroarch --set-shader " .. shellQuote(HOME .. "/.config/retroarch/shaders/tablesplit.glslp") ..
-            " -L " .. shellQuote(HOME .. "/.config/retroarch/cores/fbneo_libretro.so") ..
-            " " .. shellQuote(pb2) .. " -f",
+      label = "SEGA TETRIS", short = "TETRIS", tag = "SEGA ARCADE 1999",
+      color = { 0.2, 0.45, 0.9 }, pic = "sgtetris",
+      run = "sh " .. shellQuote(HOME .. "/naomi.sh") .. " sgtetris",
     }
   end
   -- Crazy Taxi, Sega's 1999 arcade game, on the same NAOMI emulator as Monkey Ball
@@ -544,6 +544,46 @@ local function buildSystems()
 end
 
 local buildGames
+-- FACE TO FACE: games set up so the two players can sit at opposite ends of the table.
+--   split: two fields side by side (versus only); tablesplit.glsl turns player 2's half round
+--   court: one court, player 1 at the left and player 2 at the right (Windjammers); played
+--          from ~/roms_table, whose RetroArch settings turn the picture a quarter and each
+--          player's stick with it (roms_table.cfg / roms_table.rmp)
+local FACE = {
+  { "PUZZLE BOBBLE 2",       "arcade/neogeo/pbobbl2n.zip", "split" },
+  { "PUYO PUYO 2",           "arcade/fbneo/puyopuy2.zip",  "split" },
+  { "MAGICAL DROP II",       "arcade/neogeo/magdrop2.zip", "split" },
+  { "MAGICAL DROP III",      "arcade/neogeo/magdrop3.zip", "split" },
+  { "TWINKLE STAR SPRITES",  "arcade/neogeo/twinspri.zip", "split" },
+  { "TETRIS",                "arcade/fbneo/atetris.zip",   "split" },
+  { "WINDJAMMERS",           "arcade/neogeo/wjammers.zip", "court" },
+}
+local faceList
+function faceGames()
+  if faceList then return faceList end
+  faceList = {}
+  local core = shellQuote(HOME .. "/.config/retroarch/cores/fbneo_libretro.so")
+  for _, f in ipairs(FACE) do
+    local path = ROOT .. "/" .. f[2]
+    local stem = f[2]:match("([^/]+)%.zip$")
+    if fileExists(path) then
+      local run
+      if f[3] == "split" then
+        run = "retroarch --set-shader " .. shellQuote(HOME .. "/.config/retroarch/shaders/tablesplit.glslp") ..
+              " -L " .. core .. " " .. shellQuote(path) .. " -f"
+      else
+        run = "retroarch -L " .. core .. " " .. shellQuote(HOME .. "/roms_table/" .. stem .. ".zip") .. " -f"
+      end
+      faceList[#faceList + 1] = {
+        label = f[1], short = f[1]:sub(1, 6),
+        tag = (f[3] == "split") and "EACH HALF FACES ITS PLAYER" or "THE COURT RUNS ALONG THE TABLE",
+        color = { 0.9, 0.35, 0.24 }, pic = "face_" .. stem, run = run,
+      }
+    end
+  end
+  return faceList
+end
+
 local buildPicked              -- the favourites and recently played shelves
 local buildTools               -- the setting-up shelf, behind its own box
 
@@ -639,6 +679,14 @@ function buildPicked(which)
   local byKey = allGames()
   menu, cursor = {}, 1
   -- the header has the count beside it, so the long name stays on the box
+  if which == "face" then
+    menu, cursor = {}, 1
+    title = "FACE TO FACE"
+    for _, item in ipairs(faceGames()) do menu[#menu + 1] = item end
+    sub = gameCount(#menu)
+    state, groupOf, scroll = "games", nil, cursor
+    return
+  end
   title = (which == "star") and "FAVOURITES"
        or (which == "together") and "TWO PLAYER"
        or (which == "cocktail") and "TWO PLAYER"

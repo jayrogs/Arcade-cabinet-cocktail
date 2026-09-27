@@ -49,9 +49,19 @@ lives where on it. Read both first.
   `~/.config/retroarch/crazytaxi.cfg` (copy in `tools/`): stick steers, button 1 gas, button 2
   brake, button 3 drive gear, button 4 reverse (not the stick: steering hard flipped the gear). The game's own
   buttons 3-4 (RetroArch Y/X) are moved off the panel: Crazy Taxi freezes if it gets one.
-- **Puzzle Bobble 2 TABLE VERSUS** is a shelf entry that runs the Neo Geo `pbobbl2n` with
-  `tablesplit.glsl` (in the repo root; on the Pi in `~/.config/retroarch/shaders/`): the curtain
-  plus player 2's (right-hand) field turned half round. Versus only.
+- **FACE TO FACE** shelf box (`FACE` list / `faceGames()` in `main.lua`): games set up for
+  players at opposite ends. "split" games (Puzzle Bobble 2, Puyo Puyo 2, Magical Drop II/III,
+  Twinkle Star Sprites, Atari Tetris) run with `tablesplit.glsl` (repo root; on the Pi in
+  `~/.config/retroarch/shaders/`): the curtain plus the right-hand field turned half round,
+  versus only. "court" games (Windjammers) run from `~/roms_table/` (symlinks to the game and
+  neogeo.zip), whose RetroArch content-dir files (`table/roms_table.cfg` -> config/FinalBurn
+  Neo/, `table/roms_table.rmp` -> config/remaps/FinalBurn Neo/) turn the picture a quarter and
+  each player's stick with it. Box pictures: `~/menuart/face_<stem>.png`, copied from media.
+  Windjammers' stick directions were derived, not proven in play: if one is backwards, swap it
+  in roms_table.rmp.
+- **NAOMI games** other than Monkey Ball start with `~/naomi.sh <name>` (copy in `tools/`):
+  flycast.cfg + `naomi.cfg` (moves the NAOMI's button 4 off the panel; it froze Crazy Taxi) +
+  `<name>.cfg` if present. Sega Tetris is on the shelf this way.
 - Uploads that were in the wrong place were moved to `~/uploads_set_aside/` (a duplicate
   Puzzle Bobble 2, and the Windows PC Crazy Taxi), not deleted.
 - **The screen runs at 60 Hz** (`MODE=1024x768@60.004002Hz` in `cab.sh`). A bare 1024x768 gave
