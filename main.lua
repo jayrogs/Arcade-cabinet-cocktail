@@ -546,6 +546,7 @@ end
 local buildGames
 -- FACE TO FACE: games set up so the two players can sit at opposite ends of the table.
 --   split: two fields side by side (versus only); tablesplit.glsl turns player 2's half round
+--   naomi-split: the same, for a NAOMI game (started through naomi.sh)
 --   court: one court, player 1 at the left and player 2 at the right (Windjammers); played
 --          from ~/roms_table, whose RetroArch settings turn the picture a quarter and each
 --          player's stick with it (roms_table.cfg / roms_table.rmp)
@@ -557,6 +558,7 @@ local FACE = {
   { "TWINKLE STAR SPRITES",  "arcade/neogeo/twinspri.zip", "split" },
   { "TETRIS",                "arcade/fbneo/atetris.zip",   "split" },
   { "WINDJAMMERS",           "arcade/neogeo/wjammers.zip", "court" },
+  { "SEGA TETRIS",           "naomi/sgtetris.zip",         "naomi-split" },
 }
 local faceList
 function faceGames()
@@ -568,7 +570,11 @@ function faceGames()
     local stem = f[2]:match("([^/]+)%.zip$")
     if fileExists(path) then
       local run
-      if f[3] == "split" then
+      if f[3] == "naomi-split" then
+        -- a NAOMI game: through naomi.sh (Flycast, the lock-up retry), with the same filter
+        run = "sh " .. shellQuote(HOME .. "/naomi.sh") .. " " .. stem .. " --set-shader " ..
+              shellQuote(HOME .. "/.config/retroarch/shaders/tablesplit.glslp")
+      elseif f[3] == "split" then
         run = "retroarch --set-shader " .. shellQuote(HOME .. "/.config/retroarch/shaders/tablesplit.glslp") ..
               " -L " .. core .. " " .. shellQuote(path) .. " -f"
       else
@@ -576,7 +582,7 @@ function faceGames()
       end
       faceList[#faceList + 1] = {
         label = f[1], short = f[1]:sub(1, 6),
-        tag = (f[3] == "split") and "EACH HALF FACES ITS PLAYER" or "THE COURT RUNS ALONG THE TABLE",
+        tag = (f[3] == "court") and "THE COURT RUNS ALONG THE TABLE" or "EACH HALF FACES ITS PLAYER",
         color = { 0.9, 0.35, 0.24 }, pic = "face_" .. stem, run = run,
       }
     end
