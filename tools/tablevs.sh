@@ -11,7 +11,10 @@
   if [ "$1" = naomi ]; then
     APPEND_CFG=$CFG sh /home/jayrogs/naomi.sh "$2"
   else
-    "$1" --appendconfig="$CFG" "${@:2}"
+    # plain sh (the launcher runs this with sh): no ${@:2}, which sh cannot read
+    PROG=$1
+    shift
+    "$PROG" --appendconfig="$CFG" "$@"
   fi
   kill $W 2>/dev/null
   exit 0
