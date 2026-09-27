@@ -2,9 +2,11 @@
 # The cabinet. Shows the menu, runs whatever it picks, then shows the menu again.
 #   ROTATION: turn the picture to match how the monitor is mounted.
 #             normal / 90 / 180 / 270  -- change this one line at the cab.
-#   MODE:     the monitor shows all of 1024x768 and only the middle of 1280x1024.
+#   MODE:     the monitor shows all of 1024x768 and only the middle of 1280x1024. At 60 Hz:
+#             the monitor also offers 75, which a bare "1024x768" picked, and games that time
+#             themselves off the screen (Crazy Taxi, Monkey Ball) then ran a quarter too fast.
 ROTATION=90
-MODE=1024x768
+MODE=1024x768@60.004002Hz
 LOG=/tmp/cab.log
 
 exec 9>/tmp/cab.lock

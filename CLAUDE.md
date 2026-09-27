@@ -53,6 +53,9 @@ lives where on it. Read both first.
   plus player 2's (right-hand) field turned half round. Versus only.
 - Uploads that were in the wrong place were moved to `~/uploads_set_aside/` (a duplicate
   Puzzle Bobble 2, and the Windows PC Crazy Taxi), not deleted.
+- **The screen runs at 60 Hz** (`MODE=1024x768@60.004002Hz` in `cab.sh`). A bare 1024x768 gave
+  75 Hz, and Flycast (audio sync off, so paced by the screen) ran Crazy Taxi / Monkey Ball 25%
+  too fast; other games judder at 75. Check with `wlr-randr | grep current`.
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.
