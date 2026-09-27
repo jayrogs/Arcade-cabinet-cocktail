@@ -14,7 +14,7 @@ Player 2 is the second half of the real panel and the phone page's second pad. T
 buttons differ: the panel's is its eighth button (BTN_BASE2), the phone pad's its ninth
 (BTN_BASE3; its eighth is the coin), so each device is watched for its own.
 """
-import os, select, socket, sys, time
+import os, select, socket, subprocess, sys, time
 from evdev import InputDevice, ecodes as e, list_devices
 
 QUIET = 45                      # seconds of nothing from player 2 before the flip goes off
@@ -57,7 +57,13 @@ def main():
     global START
     START = {d.path: (e.BTN_BASE3 if d.name == "Cab Web Panel 2" else e.BTN_BASE2) for d in devs}
     flipped, joined, last = False, False, 0.0
-    while True:
+    parent = os.getppid()
+    while devs:
+        # the game's launcher is gone: nothing left to do (a helper left running after its
+        # game once spun on dead controllers and ate most of the Pi, lagging Crazy Taxi)
+        if os.getppid() != parent or subprocess.run(["pgrep", "-x", "retroarch"],
+                                                     capture_output=True).returncode != 0:
+            return
         r, _, _ = select.select(devs, [], [], 1.0)
         now = time.time()
         for d in r:
@@ -72,7 +78,11 @@ def main():
                         tell(FLIP)
                         flipped = joined = True
             except OSError:
-                pass
+                devs.remove(d)               # unplugged: stop watching it, or select spins
+                try:
+                    d.close()
+                except Exception:
+                    pass
         if flipped and now - last > QUIET:
             tell(PLAIN)
             flipped = False
