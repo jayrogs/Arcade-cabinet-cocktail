@@ -44,6 +44,15 @@ lives where on it. Read both first.
   CREDITS.txt). With the folder empty, the built-in French-house tunes in
   `games/Pong/music.lua` play instead (built once, cached as .wav in the save folder).
   Claude won't download commercial soundtracks (Tetris etc.); Jay can drop his own in.
+- **Crazy Taxi** (NAOMI, `roms/naomi/crzytaxi.zip`) has its own shelf entry, launched by
+  `~/crazytaxi.sh` (copy in `tools/`, retries a start that hangs, like Monkey Ball) with
+  `~/.config/retroarch/crazytaxi.cfg` (copy in `tools/`): stick steers, button 1 gas, button 2
+  brake, stick up/down the gears. Runs at ~60% of a core.
+- **Puzzle Bobble 2 TABLE VERSUS** is a shelf entry that runs the Neo Geo `pbobbl2n` with
+  `tablesplit.glsl` (in the repo root; on the Pi in `~/.config/retroarch/shaders/`): the curtain
+  plus player 2's (right-hand) field turned half round. Versus only.
+- Uploads that were in the wrong place were moved to `~/uploads_set_aside/` (a duplicate
+  Puzzle Bobble 2, and the Windows PC Crazy Taxi), not deleted.
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.

@@ -371,7 +371,9 @@ local function loadPic(name)
     return g.newImage(love.image.newImageData(fd))
   end)
   if ok and img then
-    img:setFilter("nearest", "nearest")     -- square pixels, not a smeared photo
+    -- square pixels for the little drawn covers; a real flyer (much bigger) is smoothed
+    if img:getWidth() > 200 then img:setFilter("linear", "linear")
+    else img:setFilter("nearest", "nearest") end
     pics[name] = img
     return img
   end
@@ -479,6 +481,30 @@ local function buildSystems()
       -- tools/monkeyball.sh: Flycast for OpenGL ES, threaded rendering, and a retry when a
       -- start locks up
       run = "sh " .. shellQuote(HOME .. "/monkeyball.sh"),
+    }
+  end
+  -- Puzzle Bobble 2's versus, set up for the table: a screen filter (tablesplit.glsl) turns
+  -- the right-hand field, player 2's, half round so each player sees their own field the
+  -- right way up. Versus only: in a one-player game it would cut the single field in two,
+  -- so the ordinary Puzzle Bobble 2 on the arcade shelf stays as it was.
+  local pb2 = ROOT .. "/arcade/neogeo/pbobbl2n.zip"
+  if fileExists(pb2) then
+    menu[#menu + 1] = {
+      label = "PUZZLE BOBBLE 2 TABLE VERSUS", short = "PB2 VS", tag = "2 PLAYERS FACE TO FACE",
+      color = { 0.2, 0.7, 0.45 }, pic = "pbobble2vs",
+      run = "retroarch --set-shader " .. shellQuote(HOME .. "/.config/retroarch/shaders/tablesplit.glslp") ..
+            " -L " .. shellQuote(HOME .. "/.config/retroarch/cores/fbneo_libretro.so") ..
+            " " .. shellQuote(pb2) .. " -f",
+    }
+  end
+  -- Crazy Taxi, Sega's 1999 arcade game, on the same NAOMI emulator as Monkey Ball
+  local taxi = ROOT .. "/naomi/crzytaxi.zip"
+  if fileExists(taxi) then
+    menu[#menu + 1] = {
+      label = "CRAZY TAXI", short = "TAXI", tag = "SEGA ARCADE 1999",
+      color = { 0.95, 0.78, 0.10 }, pic = "crazytaxi",
+      -- tools/crazytaxi.sh: stick steers, button 1 gas, button 2 brake, up/down the gears
+      run = "sh " .. shellQuote(HOME .. "/crazytaxi.sh"),
     }
   end
   local cockCount = 0
