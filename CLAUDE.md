@@ -73,37 +73,13 @@ lives where on it. Read both first.
 - Project moved to a second Claude account; this file replaces the old chat history.
   Cloud sessions can't reach the Pi or the PC; run Claude Code on the PC.
 - **Reaching the Pi:** `tools/cab.py` / `tools/pi.py` log in with the PC's SSH key, no
-  password. Claude does not use the Pi's password. Passwordless `sudo` is allowed only for
-  `reboot`, `poweroff` and `systemctl restart cabweb` (`/etc/sudoers.d/cabinet`); anything
-  else needing `sudo` is for Jay to run.
-
-## Moving to the Pi 5
-
-1. **Power:** the cabinet supply is 5V 16A with a 12V terminal next to it. Tape over
-   the 12V one. Set 5V to 5.1V with a multimeter and check it at the cut end of the
-   cable before plugging in. Use a short USB-C cable rated for 5A, and ideally a 5A inline
-   fuse on the red wire.
-2. **`config.txt`** on the card's boot drive (`/boot/firmware/config.txt`):
-   - `usb_max_current_enable=1`, because a wired supply can't tell the Pi 5 it has 5A
-   - `kernel=kernel8.img`, because the Pi 5's default kernel uses 16K memory pages and
-     box86 (Crossy Road through Wine) only runs with 4K
-3. **Sound:** the Pi 5 has **no headphone jack**. The Pi 4's jack was the cabinet's sound.
-   Ordered: an onn USB-C to 3.5mm adapter (it has a sound chip, since it works with the
-   iPad Pro and Pixel phones) plus a USB-A male to USB-C female adapter, into a normal
-   USB port (not the Pi 5's power port). Reviews mention hiss; the Apple USB-C adapter is
-   the quieter fallback. Until it arrives there's no sound unless the screen plays sound
-   over HDMI.
-   - The scripts that record the cabinet's sound (`feed.sh`, `tools/cabweb.py`,
-     `tools/pongtest*.sh`) now use `@DEFAULT_MONITOR@`, whatever output is the default,
-     instead of the Pi 4 jack's name. Games already play through the default output.
-   - If sound goes to HDMI instead of the adapter, make the adapter the default:
-     `wpctl status`, then `wpctl set-default <id>`.
-4. **Check after first boot:** the controls (`tools/joytest.py`), sound, Crossy Road
-   (box86/Wine), Monkey Ball (Flycast), and the frame rates (`tools/fps.sh`).
-   Use a fan: the Pi 5 runs hotter.
-
-## Rules learned the hard way
-
+  password; they find the Pi by name (`picade.local`) or Tailscale (`100.73.167.50`), because
+  its Wi-Fi address changes on restart. Claude never types the Pi's password. Since Sept 27
+  Jay has made `sudo` password-free for his user (`/etc/sudoers.d/cabinet-all`, his choice,
+  to let Claude do boot and system changes); delete that file to undo it.
+- **Start-up is silent:** `cmdline.txt` has `console=tty3 loglevel=3 systemd.show_status=false`
+  (plus `logo.nologo`, no `splash`); the EEPROM has `DISABLE_HDMI=1` and
+  `NET_INSTALL_AT_POWER_ON=0`. The screen stays black until the menu.
 - `retroarch.cfg` on the Pi is read-only on purpose.
 - Never `pkill -f` a name that also appears in the same command line.
 - Write for Jay in plain words. The code comments explain *why* in everyday language;
