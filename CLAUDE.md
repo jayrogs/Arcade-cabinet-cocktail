@@ -74,7 +74,8 @@ lives where on it. Read both first.
   Cloud sessions can't reach the Pi or the PC; run Claude Code on the PC.
 - **Reaching the Pi:** `tools/cab.py` / `tools/pi.py` log in with the PC's SSH key, no
   password; they find the Pi by name (`picade.local`) or Tailscale (`100.73.167.50`), because
-  its Wi-Fi address changes on restart. Claude never types the Pi's password. Since Sept 27
+  its Wi-Fi address used to change on restart. Since Sept 27 it is fixed at 192.168.1.50
+  (NetworkManager connection `cab-wifi`, manual; below the AT&T gateway's .64-.253 pool). Claude never types the Pi's password. Since Sept 27
   Jay has made `sudo` password-free for his user (`/etc/sudoers.d/cabinet-all`, his choice,
   to let Claude do boot and system changes); delete that file to undo it.
 - **Start-up is silent:** `cmdline.txt` has `console=tty3 loglevel=3 systemd.show_status=false`

@@ -5,9 +5,10 @@ this machine is on Jay's network or somewhere else entirely.
 """
 import os, socket, paramiko
 
-# the home addresses first, then the cabinet by its own name on the home network (the
-# Wi-Fi address can change after a restart), then Tailscale
-HOSTS = ["192.168.1.145", "192.168.1.175", "picade.local", "100.73.167.50", "arcade-cab"]
+# the cabinet's fixed home address first (192.168.1.50, set Sept 27, outside the AT&T
+# gateway's automatic range), then its name on the home network, then Tailscale, then the
+# addresses it had before it was fixed
+HOSTS = ["192.168.1.50", "picade.local", "100.73.167.50", "arcade-cab", "192.168.1.175", "192.168.1.145"]
 USER = "jayrogs"
 
 def reachable(host, port=22, timeout=4):
