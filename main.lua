@@ -559,6 +559,7 @@ local FACE = {
   { "TWINKLE STAR SPRITES",  "arcade/neogeo/twinspri.zip", "split" },
   { "TETRIS",                "arcade/fbneo/atetris.zip",   "split" },
   { "WINDJAMMERS",           "arcade/neogeo/wjammers.zip", "court" },
+  { "SMASH TV",              "arcade/fbneo/smashtv.zip",   "arena" },
   { "SEGA TETRIS",           "naomi/sgtetris.zip",         "naomi-split" },
   { "TETRIS GRAND MASTER 2 PLUS", "arcade/fbneo/tgm2p.zip",  "split" },
   { "TETRIS PLUS 2",         "arcade/fbneo/tetrisp2.zip",  "split" },
@@ -582,12 +583,18 @@ function faceGames()
         run = tablevs .. " naomi " .. stem           -- a NAOMI game: through naomi.sh
       elseif f[3] == "split" then
         run = tablevs .. " retroarch -L " .. core .. " " .. shellQuote(path) .. " -f"
+      elseif f[3] == "arena" then
+        -- Smash TV: from ~/roms_smash, whose settings turn the picture and each stick, and
+        -- put the shooting on the four buttons (roms_smash.cfg / roms_smash.rmp)
+        run = "retroarch -L " .. core .. " " .. shellQuote(HOME .. "/roms_smash/" .. stem .. ".zip") .. " -f"
       else
         run = "retroarch -L " .. core .. " " .. shellQuote(HOME .. "/roms_table/" .. stem .. ".zip") .. " -f"
       end
       faceList[#faceList + 1] = {
         label = f[1], short = f[1]:sub(1, 6),
-        tag = (f[3] == "court") and "THE COURT RUNS ALONG THE TABLE" or "EACH HALF FACES ITS PLAYER",
+        tag = (f[3] == "court") and "THE COURT RUNS ALONG THE TABLE"
+           or (f[3] == "arena") and "BUTTONS SHOOT: LEFT FWD BACK RIGHT"
+           or "EACH HALF FACES ITS PLAYER",
         color = { 0.9, 0.35, 0.24 }, pic = "face_" .. stem, run = run,
       }
     end
