@@ -47,7 +47,7 @@ lives where on it. Read both first.
 - **Crazy Taxi** (NAOMI, `roms/naomi/crzytaxi.zip`) has its own shelf entry, launched by
   `~/crazytaxi.sh` (copy in `tools/`, retries a start that hangs, like Monkey Ball) with
   `~/.config/retroarch/crazytaxi.cfg` (copy in `tools/`): stick steers, button 1 gas, button 2
-  brake, button 3 / stick up drive gear, button 4 / stick down reverse. The game's own
+  brake, button 3 drive gear, button 4 reverse (not the stick: steering hard flipped the gear). The game's own
   buttons 3-4 (RetroArch Y/X) are moved off the panel: Crazy Taxi freezes if it gets one.
 - **Puzzle Bobble 2 TABLE VERSUS** is a shelf entry that runs the Neo Geo `pbobbl2n` with
   `tablesplit.glsl` (in the repo root; on the Pi in `~/.config/retroarch/shaders/`): the curtain
