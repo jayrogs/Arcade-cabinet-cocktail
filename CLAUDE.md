@@ -67,6 +67,13 @@ lives where on it. Read both first.
 - **The screen runs at 60 Hz** (`MODE=1024x768@60.004002Hz` in `cab.sh`). A bare 1024x768 gave
   75 Hz, and Flycast (audio sync off, so paced by the screen) ran Crazy Taxi / Monkey Ball 25%
   too fast; other games judder at 75. Check with `wlr-randr | grep current`.
+- **The House of the Dead** (Model 2) runs in full MAME (`mame_libretro`, ~95% speed) from
+  `roms/mame/hotdo.zip` (the original release, so named `hotdo`). The stick moves each
+  player's crosshair: MAME `saves/MAME/mame/cfg/default.cfg` (copy: `table/mame_default.cfg`)
+  binds P1/P2_LIGHTGUN_X/Y increment/decrement to JOYCODE_1/2_HAT1*; `hotdo.cfg`
+  (`table/hotdo.cfg`) turns the crosshairs on. Button 1 fires; firing at the very edge
+  reloads. P1's crosshair is blue, P2's red. Tested with one fake pad per player (two fake
+  pads at once confused RetroArch's port assignment, not the game).
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.

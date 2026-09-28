@@ -497,6 +497,19 @@ local function buildSystems()
       run = "sh " .. shellQuote(HOME .. "/naomi.sh") .. " sgtetris",
     }
   end
+  -- The House of the Dead, Sega's 1996 light-gun game (Model 2), in full MAME: the stick
+  -- moves each player's crosshair, button 1 fires, firing at the very edge reloads.
+  -- MAME's own settings for it: table/mame_default.cfg (the crosshair on the stick),
+  -- table/hotdo.cfg (crosshairs shown)
+  local hotd = ROOT .. "/mame/hotdo.zip"
+  if fileExists(hotd) then
+    menu[#menu + 1] = {
+      label = "THE HOUSE OF THE DEAD", short = "HOTD", tag = "STICK AIMS  EDGE RELOADS",
+      color = { 0.55, 0.08, 0.08 }, pic = "hotd",
+      run = "retroarch -L " .. shellQuote(HOME .. "/.config/retroarch/cores/mame_libretro.so") ..
+            " " .. shellQuote(hotd) .. " -f",
+    }
+  end
   -- Crazy Taxi, Sega's 1999 arcade game, on the same NAOMI emulator as Monkey Ball
   local taxi = ROOT .. "/naomi/crzytaxi.zip"
   if fileExists(taxi) then
