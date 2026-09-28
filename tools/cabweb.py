@@ -512,6 +512,7 @@ PAGE = """<!doctype html>
     <option value=tg16>TurboGrafx</option><option value=atari2600>Atari 2600</option>
     <option value=atari7800>Atari 7800</option><option value=lynx>Lynx</option>
     <option value=psx>PlayStation</option><option value=mame>MAME</option>
+    <option value=naomi>Sega NAOMI</option>
     <option value=music>Menu music</option>
    </select>
    <button onclick="document.getElementById('upfile').click()">Choose the file</button>
@@ -751,6 +752,12 @@ function upload(input){
   const said = document.getElementById('upsaid');
   if (!f) return;
   const to = document.getElementById('upto').value;
+  if (f.size > 16 * 1024 * 1024 * 1024) {
+    said.style.color = '#ff6b6b';
+    said.textContent = 'NOT SAVED - that file is bigger than 16 GB';
+    input.value = '';
+    return;
+  }
   const x = new XMLHttpRequest();
   x.open('POST', '/upload?to=' + encodeURIComponent(to) + '&name=' + encodeURIComponent(f.name));
   x.upload.onprogress = e => {
@@ -843,12 +850,16 @@ WHERE = {                       # what the page offers -> the folder it means
     "arcade": "arcade/fbneo", "mame": "mame", "nes": "nes", "snes": "snes",
     "genesis": "genesis", "sms": "sms", "gg": "gg", "gb": "gb", "gba": "gba",
     "tg16": "tg16", "atari2600": "atari2600", "atari7800": "atari7800",
-    "lynx": "lynx", "psx": "psx", "music": "music",
+    "lynx": "lynx", "psx": "psx", "naomi": "naomi", "music": "music",
 }
 KINDS = (".zip", ".7z", ".nes", ".sfc", ".smc", ".md", ".gen", ".bin", ".sms", ".gg",
          ".gb", ".gbc", ".gba", ".pce", ".a26", ".a78", ".lnx", ".chd", ".cue",
          ".mp3", ".ogg", ".wav")
-BIGGEST = 800 * 1024 * 1024
+# big enough for a game with a hard-disk image (CarnEvil is 2.2 GB); the card must also keep
+# 2 GB free after it. (It was 800 MB, and a bigger file was refused before it was read, which
+# the phone showed only as a lost connection: the page now checks the size before sending.)
+BIGGEST = 16 * 1024 * 1024 * 1024
+KEEP_FREE = 2 * 1024 * 1024 * 1024
 GOODNAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._()\[\]!&+,'-]{0,120}$")
 
 def take_upload(handler, query):
@@ -863,6 +874,9 @@ def take_upload(handler, query):
     size = int(handler.headers.get("Content-Length", 0))
     if size <= 0 or size > BIGGEST:
         return 400, "the file is empty or too big"
+    st = os.statvfs(ROMS)
+    if size > st.f_bavail * st.f_frsize - KEEP_FREE:
+        return 400, "there is not enough room on the cabinet for that"
     folder = os.path.join(ROMS, WHERE[to])
     os.makedirs(folder, exist_ok=True)
     part = os.path.join(folder, "." + name + ".part")
