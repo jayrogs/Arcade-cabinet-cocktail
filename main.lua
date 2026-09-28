@@ -77,6 +77,7 @@ local picker, pickerAt, pickerLetters = false, 1, {}
 local message, messageTimer
 local art = {}                -- cache: key -> image or false
 local titles = {}             -- short file name -> the game's real title
+local newArcade = {}          -- the NEW ARCADE box's games (buildSystems fills it)
 local favourites = {}         -- the ones starred, by system and file name
 local recent = {}             -- what was played last, newest first
 local totest = {}             -- games to try at the real table (arcade/totest.txt)
@@ -472,10 +473,13 @@ local function buildSystems()
       color = { 0.24, 0.62, 0.90 }, run = "sh " .. shellQuote(crossy), pic = "crossy",
     }
   end
+  -- NEW ARCADE: the 3D-era arcade games (NAOMI and the heavy MAME boards), each with its own
+  -- launcher, in one box so the main shelf is not a row of single games
+  newArcade = {}
   -- Monkey Ball, Sega's 2001 arcade game, played by Flycast (the NAOMI board it ran on)
   local monkey = ROOT .. "/naomi/monkeyba.zip"
   if fileExists(monkey) then
-    menu[#menu + 1] = {
+    newArcade[#newArcade + 1] = {
       label = "MONKEY BALL", short = "MONKEY", tag = "SEGA ARCADE 2001",
       color = { 0.93, 0.55, 0.12 }, pic = "monkeyball",
       -- tools/monkeyball.sh: Flycast for OpenGL ES, threaded rendering, and a retry when a
@@ -483,15 +487,10 @@ local function buildSystems()
       run = "sh " .. shellQuote(HOME .. "/monkeyball.sh"),
     }
   end
-  -- FACE TO FACE: head-to-head games set up for the table (see faceGames)
-  if #faceGames() > 0 then
-    menu[#menu + 1] = { label = "FACE TO FACE", short = "VERSUS", tag = gameCount(#faceGames()),
-                        color = { 0.9, 0.35, 0.24 }, picked = "face", pic = "facetoface" }
-  end
   -- Sega Tetris (NAOMI, 1999): tools/naomi.sh, Flycast with the retry and naomi.cfg
   local sgt = ROOT .. "/naomi/sgtetris.zip"
   if fileExists(sgt) then
-    menu[#menu + 1] = {
+    newArcade[#newArcade + 1] = {
       label = "SEGA TETRIS", short = "TETRIS", tag = "SEGA ARCADE 1999",
       color = { 0.2, 0.45, 0.9 }, pic = "sgtetris",
       run = "sh " .. shellQuote(HOME .. "/naomi.sh") .. " sgtetris",
@@ -503,7 +502,7 @@ local function buildSystems()
   -- table/hotdo.cfg (crosshairs shown)
   local hotd = ROOT .. "/mame/hotdo.zip"
   if fileExists(hotd) then
-    menu[#menu + 1] = {
+    newArcade[#newArcade + 1] = {
       label = "THE HOUSE OF THE DEAD", short = "HOTD", tag = "STICK AIMS  EDGE RELOADS",
       color = { 0.55, 0.08, 0.08 }, pic = "hotd",
       run = "sh " .. shellQuote(HOME .. "/mamegun.sh") .. " hotdo",   -- restores its crosshairs
@@ -514,7 +513,7 @@ local function buildSystems()
   -- table/carnevil.cfg. Needs carnevil.zip with 486_carnevil.u96 and carnevil/carnevil.chd.
   local carn = ROOT .. "/mame/carnevil.zip"
   if fileExists(carn) then
-    menu[#menu + 1] = {
+    newArcade[#newArcade + 1] = {
       label = "CARNEVIL", short = "CARNEV", tag = "STICK AIMS  EDGE RELOADS",
       color = { 0.45, 0.1, 0.4 }, pic = "carnevil",
       run = "sh " .. shellQuote(HOME .. "/mamegun.sh") .. " carnevil",   -- restores its crosshairs
@@ -523,12 +522,31 @@ local function buildSystems()
   -- Crazy Taxi, Sega's 1999 arcade game, on the same NAOMI emulator as Monkey Ball
   local taxi = ROOT .. "/naomi/crzytaxi.zip"
   if fileExists(taxi) then
-    menu[#menu + 1] = {
+    newArcade[#newArcade + 1] = {
       label = "CRAZY TAXI", short = "TAXI", tag = "SEGA ARCADE 1999",
       color = { 0.95, 0.78, 0.10 }, pic = "crazytaxi",
       -- tools/crazytaxi.sh: stick steers, button 1 gas, button 2 brake, up/down the gears
       run = "sh " .. shellQuote(HOME .. "/crazytaxi.sh"),
     }
+  end
+  -- Area 51, Atari's 1995 light-gun game (Jaguar-based COJAG), in full MAME with the same
+  -- stick aiming as the other gun games (mamegun.sh; table_cfg/area51.cfg)
+  local a51 = ROOT .. "/mame/area51.zip"
+  if fileExists(a51) then
+    newArcade[#newArcade + 1] = {
+      label = "AREA 51", short = "AREA51", tag = "STICK AIMS  EDGE RELOADS",
+      color = { 0.2, 0.5, 0.25 }, pic = "area51",
+      run = "sh " .. shellQuote(HOME .. "/mamegun.sh") .. " area51",
+    }
+  end
+  if #newArcade > 0 then
+    menu[#menu + 1] = { label = "NEW ARCADE", short = "NEW", tag = gameCount(#newArcade),
+                        color = { 0.85, 0.25, 0.55 }, picked = "newarcade", pic = "newarcade" }
+  end
+  -- FACE TO FACE: head-to-head games set up for the table (see faceGames)
+  if #faceGames() > 0 then
+    menu[#menu + 1] = { label = "FACE TO FACE", short = "VERSUS", tag = gameCount(#faceGames()),
+                        color = { 0.9, 0.35, 0.24 }, picked = "face", pic = "facetoface" }
   end
   local cockCount = 0
   for _, sys in ipairs(SYSTEMS) do
@@ -720,6 +738,14 @@ function buildPicked(which)
   local byKey = allGames()
   menu, cursor = {}, 1
   -- the header has the count beside it, so the long name stays on the box
+  if which == "newarcade" then
+    menu, cursor = {}, 1
+    title = "NEW ARCADE"
+    for _, item in ipairs(newArcade) do menu[#menu + 1] = item end
+    sub = gameCount(#menu)
+    state, groupOf, scroll = "games", nil, cursor
+    return
+  end
   if which == "face" then
     menu, cursor = {}, 1
     title = "FACE TO FACE"

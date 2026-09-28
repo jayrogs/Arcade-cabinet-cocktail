@@ -2,7 +2,7 @@
 -- Add a line here and drop files in the matching folder; the menu picks it up.
 return {
   { dir = "arcade",    name = "ARCADE",           short = "ARCADE", core = "fbneo",             ext = "zip 7z",                  color = { 0.80, 0.11, 0.18 } },
-  { dir = "mame",      name = "MAME",             short = "MAME",   core = "mame2003_plus",     ext = "zip",                     color = { 0.62, 0.10, 0.34 } },
+  -- (MAME: not a shelf. Its few games - the gun games - are in the menu's NEW ARCADE box.)
   { dir = "nes",       name = "NINTENDO",         short = "NES",    core = "nestopia",          ext = "nes unf unif zip",        color = { 0.55, 0.13, 0.14 } },
   { dir = "snes",      name = "SUPER NINTENDO",   short = "SNES",   core = "snes9x",            ext = "sfc smc fig swc zip",     color = { 0.35, 0.28, 0.60 } },
   { dir = "genesis",   name = "MEGA DRIVE",       short = "MEGA",   core = "genesis_plus_gx",   ext = "md gen bin smd zip",      color = { 0.10, 0.28, 0.62 } },

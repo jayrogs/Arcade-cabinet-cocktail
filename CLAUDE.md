@@ -74,7 +74,7 @@ lives where on it. Read both first.
   (`table/hotdo.cfg`) turns the crosshairs on. Button 1 fires; firing at the very edge
   reloads. P1's crosshair is blue, P2's red. Tested with one fake pad per player (two fake
   pads at once confused RetroArch's port assignment, not the game).
-- **CarnEvil** (Midway Seattle, 1998) runs in full MAME at full speed from `roms/mame/carnevil.zip`
+- **CarnEvil** (Midway Seattle, 1998) runs in full MAME (about 75% speed in play) from `roms/mame/carnevil.zip`
   (must contain `486_carnevil.u96`, which MAME needs since 0.226; the first upload lacked it) plus
   `roms/mame/carnevil/carnevil.chd`. Same stick aiming as House of the Dead; `table/carnevil.cfg` shows only P1's crosshair and
   slows it (keydelta 3). It runs ~44 fps in play (75%), not full speed: one busy thread.
@@ -89,6 +89,14 @@ lives where on it. Read both first.
 - **Overclocked to 2.8 GHz** (`arm_freq=2800` in `[pi5]` of config.txt, Sept 28; backup
   config.txt.bak-oc). Needed the supply raised: ~5.25V idle at the Pi, 4.99V under full load, no
   undervoltage. At 5.05V idle it dipped to 4.68V and throttled. Stress-tested at 70°C max.
+- **Menu (Sept 28):** no MAME shelf any more (systems.lua); the 3D-era arcade games (Crazy Taxi,
+  Monkey Ball, Sega Tetris, House of the Dead, CarnEvil, Area 51) are in a **NEW ARCADE** box
+  (`newArcade` in main.lua). Area 51 (`roms/mame/area51.zip` + `area51/*.chd`) runs ~90% speed via
+  mamegun.sh, P1 crosshair only (`table/area51.cfg`); its gun calibration is untested.
+- **Dreamcast** shelf: Flycast with the real BIOS (`system/dc/dc_boot.bin`, `dc_flash.bin`).
+  Crazy Taxi 2 (converted .cue/.bin -> .chd with chdman, now installed) has its controls in
+  `config/Flycast/Crazy Taxi 2 (USA).cfg` (copy in `table/`): stick steers, 1 gas, 2 brake,
+  3 = A (menus / hop), 4 = B. Tested driving at full speed. Phone page uploads Dreamcast games.
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.
