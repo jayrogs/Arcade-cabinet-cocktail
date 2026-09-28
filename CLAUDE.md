@@ -76,11 +76,19 @@ lives where on it. Read both first.
   pads at once confused RetroArch's port assignment, not the game).
 - **CarnEvil** (Midway Seattle, 1998) runs in full MAME at full speed from `roms/mame/carnevil.zip`
   (must contain `486_carnevil.u96`, which MAME needs since 0.226; the first upload lacked it) plus
-  `roms/mame/carnevil/carnevil.chd`. Same stick aiming as House of the Dead; crosshairs on in
-  `carnevil.cfg` (copy `table/carnevil.cfg`). Both players' crosshairs tested.
+  `roms/mame/carnevil/carnevil.chd`. Same stick aiming as House of the Dead; `table/carnevil.cfg` shows only P1's crosshair and
+  slows it (keydelta 3). It runs ~44 fps in play (75%), not full speed: one busy thread.
+  **Its guns had to be calibrated** in the game's own service menu or shots never land: done
+  Sept 28 (both guns; the game's marker sat inside the crosshair). Saved in its nvram; a copy
+  is in `~/table_cfg/carnevil_nvram/` - if shots stop landing, copy it back to
+  `saves/MAME/mame/nvram/carnevil/`. To recalibrate: start it with RetroArch's F2 save-state
+  hotkey off, F2 = service, `=`/`-` move, F2 select, then GUN CALIBRATION.
 - **House of the Dead 2** is in `roms/naomi/hotd2.zip` but needs `hod2bios.zip` (its own BIOS),
   not yet supplied. NAOMI light guns go through Flycast, so its aiming still has to be set up.
 - **Phone page uploads** take up to 16 GB (2 GB must stay free); it's at http://192.168.1.50:8080.
+- **Overclocked to 2.8 GHz** (`arm_freq=2800` in `[pi5]` of config.txt, Sept 28; backup
+  config.txt.bak-oc). Needed the supply raised: ~5.25V idle at the Pi, 4.99V under full load, no
+  undervoltage. At 5.05V idle it dipped to 4.68V and throttled. Stress-tested at 70°C max.
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.
