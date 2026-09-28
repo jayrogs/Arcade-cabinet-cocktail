@@ -506,8 +506,7 @@ local function buildSystems()
     menu[#menu + 1] = {
       label = "THE HOUSE OF THE DEAD", short = "HOTD", tag = "STICK AIMS  EDGE RELOADS",
       color = { 0.55, 0.08, 0.08 }, pic = "hotd",
-      run = "retroarch -L " .. shellQuote(HOME .. "/.config/retroarch/cores/mame_libretro.so") ..
-            " " .. shellQuote(hotd) .. " -f",
+      run = "sh " .. shellQuote(HOME .. "/mamegun.sh") .. " hotdo",   -- restores its crosshairs
     }
   end
   -- CarnEvil, Midway's 1998 light-gun game, in full MAME (full speed on the Pi 5): the same
@@ -518,8 +517,7 @@ local function buildSystems()
     menu[#menu + 1] = {
       label = "CARNEVIL", short = "CARNEV", tag = "STICK AIMS  EDGE RELOADS",
       color = { 0.45, 0.1, 0.4 }, pic = "carnevil",
-      run = "retroarch -L " .. shellQuote(HOME .. "/.config/retroarch/cores/mame_libretro.so") ..
-            " " .. shellQuote(carn) .. " -f",
+      run = "sh " .. shellQuote(HOME .. "/mamegun.sh") .. " carnevil",   -- restores its crosshairs
     }
   end
   -- Crazy Taxi, Sega's 1999 arcade game, on the same NAOMI emulator as Monkey Ball
