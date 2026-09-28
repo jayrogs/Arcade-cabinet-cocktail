@@ -510,6 +510,18 @@ local function buildSystems()
             " " .. shellQuote(hotd) .. " -f",
     }
   end
+  -- CarnEvil, Midway's 1998 light-gun game, in full MAME (full speed on the Pi 5): the same
+  -- stick aiming as The House of the Dead (table/mame_default.cfg), crosshairs on in
+  -- table/carnevil.cfg. Needs carnevil.zip with 486_carnevil.u96 and carnevil/carnevil.chd.
+  local carn = ROOT .. "/mame/carnevil.zip"
+  if fileExists(carn) then
+    menu[#menu + 1] = {
+      label = "CARNEVIL", short = "CARNEV", tag = "STICK AIMS  EDGE RELOADS",
+      color = { 0.45, 0.1, 0.4 }, pic = "carnevil",
+      run = "retroarch -L " .. shellQuote(HOME .. "/.config/retroarch/cores/mame_libretro.so") ..
+            " " .. shellQuote(carn) .. " -f",
+    }
+  end
   -- Crazy Taxi, Sega's 1999 arcade game, on the same NAOMI emulator as Monkey Ball
   local taxi = ROOT .. "/naomi/crzytaxi.zip"
   if fileExists(taxi) then

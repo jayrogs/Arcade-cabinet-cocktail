@@ -74,6 +74,13 @@ lives where on it. Read both first.
   (`table/hotdo.cfg`) turns the crosshairs on. Button 1 fires; firing at the very edge
   reloads. P1's crosshair is blue, P2's red. Tested with one fake pad per player (two fake
   pads at once confused RetroArch's port assignment, not the game).
+- **CarnEvil** (Midway Seattle, 1998) runs in full MAME at full speed from `roms/mame/carnevil.zip`
+  (must contain `486_carnevil.u96`, which MAME needs since 0.226; the first upload lacked it) plus
+  `roms/mame/carnevil/carnevil.chd`. Same stick aiming as House of the Dead; crosshairs on in
+  `carnevil.cfg` (copy `table/carnevil.cfg`). Both players' crosshairs tested.
+- **House of the Dead 2** is in `roms/naomi/hotd2.zip` but needs `hod2bios.zip` (its own BIOS),
+  not yet supplied. NAOMI light guns go through Flycast, so its aiming still has to be set up.
+- **Phone page uploads** take up to 16 GB (2 GB must stay free); it's at http://192.168.1.50:8080.
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.
