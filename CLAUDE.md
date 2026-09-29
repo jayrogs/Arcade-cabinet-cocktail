@@ -92,7 +92,12 @@ lives where on it. Read both first.
 - **Menu (Sept 28):** no MAME shelf any more (systems.lua); the 3D-era arcade games (Crazy Taxi,
   Monkey Ball, Sega Tetris, House of the Dead, CarnEvil, Area 51) are in a **NEW ARCADE** box
   (`newArcade` in main.lua). Area 51 (`roms/mame/area51.zip` + `area51/*.chd`) runs ~90% speed via
-  mamegun.sh, P1 crosshair only (`table/area51.cfg`); its gun calibration is untested.
+  mamegun.sh, P1 crosshair only (`table/area51.cfg`). **Gun calibrated Sept 28** (service F2 ->
+  shoot GUN TEST, right START (key 2) -> CALIBRATE: crosshair on the centre +, hold trigger till DONE;
+  right START again = tracking screen, whose red + is where the game aims). Before: shots ~15px low.
+  After: dead centre, 8-14px toward the middle near the side edges (the game's own scaling; still
+  inside the ring). Saved in nvram; copy in `~/table_cfg/area51_nvram/` (pre-calibration copy in
+  `area51_nvram_before/`). Leaving a test screen = hold left START.
 - **Dreamcast** shelf: Flycast with the real BIOS (`system/dc/dc_boot.bin`, `dc_flash.bin`).
   Crazy Taxi 2 (converted .cue/.bin -> .chd with chdman, now installed) has its controls in
   `config/Flycast/Crazy Taxi 2 (USA).cfg` (copy in `table/`): stick steers, 1 gas, 2 brake,
