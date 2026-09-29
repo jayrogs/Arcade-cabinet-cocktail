@@ -102,6 +102,10 @@ lives where on it. Read both first.
   Crazy Taxi 2 (converted .cue/.bin -> .chd with chdman, now installed) has its controls in
   `config/Flycast/Crazy Taxi 2 (USA).cfg` (copy in `table/`): stick steers, 1 gas, 2 brake,
   3 = A (menus / hop), 4 = B. Tested driving at full speed. Phone page uploads Dreamcast games.
+  **Dreamcast sound is 5 dB down** (`table/dreamcast.cfg` -> `config/Flycast/dreamcast.cfg`, a content-dir
+  override for every game in roms/dreamcast): Crazy Taxi 2 mixes so loud that with the 180% boost it
+  clipped on 1.5% of samples (sounded awful). Checked by recording the output (`pw-record
+  -P stream.capture.sink=true`): 0 clipped at -5 dB, and no dropouts or splices either.
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.
