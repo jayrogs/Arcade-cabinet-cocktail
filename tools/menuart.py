@@ -322,7 +322,7 @@ CARDS = [
     ("taketurns",  "TURNS",    (26, 112, 87),  "table"),   # the 2P TAKE TURNS box
     ("totest",     "TEST",     (128, 51, 112), "table"),   # the to-test list, in SETTING UP
     ("extras",     "EXTRAS",   (61, 128, 204), "cart"),    # the EXTRAS box (Pong, Dr Mario...)
-    ("favourites", "STARS",    (184, 133, 15), "star"),
+    ("favourites", "FAVES",    (184, 133, 15), "star"),
     ("recent",     "AGAIN",    (41, 112, 102), "clock"),
     ("arcade",     "RETRO",    (204, 28, 46),  "cabinet"),
     ("mame",       "MAME",     (158, 26, 87),  "cabinet"),

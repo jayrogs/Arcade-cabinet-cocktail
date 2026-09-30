@@ -89,11 +89,11 @@ lives where on it. Read both first.
 - **Overclocked to 2.8 GHz** (`arm_freq=2800` in `[pi5]` of config.txt, Sept 28; backup
   config.txt.bak-oc). Needed the supply raised: ~5.25V idle at the Pi, 4.99V under full load, no
   undervoltage. At 5.05V idle it dipped to 4.68V and throttled. Stress-tested at 70°C max.
-- **Main shelf reorganised (Sept 30)**, 14 boxes -> 9, in this order: RETRO ARCADE (the arcade
+- **Main shelf reorganised (Sept 30)**, 14 boxes -> 9, in this order: FAVES (first since Sept 30, Jay's ask; was FAVOURITES/STARS), RETRO ARCADE (the arcade
   folder), MODERN ARCADE (was NEW ARCADE; `newArcade` in the code; its own launchers + every game of a machine marked `inNew` in systems.lua,
   i.e. Dreamcast, which has no box of its own), 2P VERSUS (was FACE TO FACE), 2P TAKE TURNS (was
   TWO PLAYER: the cocktail-flip list), EXTRAS (Dr Mario, Pong, Flappy Bird, Crossy Road; `extras`
-  in main.lua), any other machine with games, FAVOURITES, PLAYED LATELY, SETTING UP (the to-test
+  in main.lua), any other machine with games, PLAYED LATELY, SETTING UP (the to-test
   list is now inside it), TURN OFF. Deploy: swap main.lua / systems.lua inside `~/cabmenu.love`
   (a zip) and kill the menu's `love`; cab.sh restarts it. Box pictures: `tools/menuart.py` CARDS.
 - **Menu (Sept 28):** no MAME shelf any more (systems.lua); the 3D-era arcade games (Crazy Taxi,

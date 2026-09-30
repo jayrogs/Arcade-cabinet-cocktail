@@ -447,7 +447,13 @@ local function buildSystems()
       }
     end
   end
-  -- the arcade is the main thing this cabinet is for, so it is what the shelf opens on
+  -- the starred games lead: they are what gets played most, so the shelf opens on them
+  local stars, plays = countPicked()
+  if stars > 0 then
+    menu[#menu + 1] = { label = "FAVES", short = "FAVES", tag = gameCount(stars),
+                        color = { 0.72, 0.52, 0.06 }, picked = "star", pic = "favourites" }
+  end
+  -- then the arcade, the main thing this cabinet is for
   for _, s in ipairs(SYSTEMS) do if s.dir == "arcade" then machine(s) end end
   extras = {}
   local drc = HOME .. "/drcocktail.love"
@@ -579,11 +585,6 @@ local function buildSystems()
     if s.dir ~= "arcade" and not s.inNew then machine(s) end
   end
 
-  local stars, plays = countPicked()
-  if stars > 0 then
-    menu[#menu + 1] = { label = "FAVOURITES", short = "STARS", tag = gameCount(stars),
-                        color = { 0.72, 0.52, 0.06 }, picked = "star", pic = "favourites" }
-  end
   if plays > 0 then
     menu[#menu + 1] = { label = "PLAYED LATELY", short = "AGAIN", tag = gameCount(plays),
                         color = { 0.16, 0.44, 0.40 }, picked = "recent", pic = "recent" }
@@ -793,7 +794,7 @@ function buildPicked(which)
     state, groupOf, scroll = "games", nil, cursor
     return
   end
-  title = (which == "star") and "FAVOURITES"
+  title = (which == "star") and "FAVES"
        or (which == "together") and "TWO PLAYER"
        or (which == "cocktail") and "2P TAKE TURNS"
        or (which == "totest") and "TO TEST AT THE TABLE"
