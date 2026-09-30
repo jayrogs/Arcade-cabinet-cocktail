@@ -78,6 +78,7 @@ local message, messageTimer
 local art = {}                -- cache: key -> image or false
 local titles = {}             -- short file name -> the game's real title
 local newArcade = {}          -- the NEW ARCADE box's games (buildSystems fills it)
+local extras = {}             -- the EXTRAS box's games: the home-made ones and Crossy Road
 local favourites = {}         -- the ones starred, by system and file name
 local recent = {}             -- what was played last, newest first
 local totest = {}             -- games to try at the real table (arcade/totest.txt)
@@ -433,9 +434,11 @@ end
 
 local function buildSystems()
   menu, cursor, title, sub = {}, 1, "ARCADE CABINET", nil
-  -- THE MACHINES COME FIRST, and the arcade is the first of them: it is the main thing
-  -- this cabinet is for, so it is what the shelf opens on.
-  for _, s in ipairs(SYSTEMS) do
+  -- THE SHELF, IN ORDER: what to play (retro arcade, new arcade), how to play it together
+  -- (versus, take turns), the odd ones (extras), any other machines, your own lists
+  -- (favourites, played lately), then setting up and off. It used to be fourteen boxes with
+  -- single games mixed in among the folders, and nobody could tell which box held what.
+  local function machine(s)
     local games = catalogue[s.dir] or {}
     if #games > 0 then
       menu[#menu + 1] = {
@@ -444,23 +447,26 @@ local function buildSystems()
       }
     end
   end
+  -- the arcade is the main thing this cabinet is for, so it is what the shelf opens on
+  for _, s in ipairs(SYSTEMS) do if s.dir == "arcade" then machine(s) end end
+  extras = {}
   local drc = HOME .. "/drcocktail.love"
   if fileExists(drc) then
-    menu[#menu + 1] = {
+    extras[#extras + 1] = {
       label = "DR. MARIO COCKTAIL EDITION", short = "DR MARIO", tag = "2 PLAYER",
       color = { 0.10, 0.34, 0.68 }, run = "love " .. shellQuote(drc), pic = "drmario",
     }
   end
   local pong = HOME .. "/pong.love"
   if fileExists(pong) then
-    menu[#menu + 1] = {
+    extras[#extras + 1] = {
       label = "PONG", short = "PONG", tag = "1 OR 2 PLAYERS",
       color = { 0.12, 0.30, 0.40 }, run = "love " .. shellQuote(pong), pic = "pong",
     }
   end
   local flap = HOME .. "/flap.love"
   if fileExists(flap) then
-    menu[#menu + 1] = {
+    extras[#extras + 1] = {
       label = "FLAPPY BIRD", short = "FLAPPY", tag = "1 OR 2 PLAYERS",
       color = { 0.24, 0.62, 0.88 }, run = "love " .. shellQuote(flap), pic = "flap",
     }
@@ -468,7 +474,7 @@ local function buildSystems()
   -- the real Crossy Road arcade software, run through box86 and wine
   local crossy = HOME .. "/crossy.sh"
   if fileExists(crossy) then
-    menu[#menu + 1] = {
+    extras[#extras + 1] = {
       label = "CROSSY ROAD", short = "CROSSY", tag = "2 PLAYERS   THE REAL ONE",
       color = { 0.24, 0.62, 0.90 }, run = "sh " .. shellQuote(crossy), pic = "crossy",
     }
@@ -539,13 +545,19 @@ local function buildSystems()
       run = "sh " .. shellQuote(HOME .. "/mamegun.sh") .. " area51",
     }
   end
-  if #newArcade > 0 then
-    menu[#menu + 1] = { label = "NEW ARCADE", short = "NEW", tag = gameCount(#newArcade),
+  -- machines marked inNew in systems.lua (Dreamcast: the same hardware as the NAOMI arcade
+  -- board) have no box of their own; their games sit in NEW ARCADE (see buildPicked)
+  local newCount = #newArcade
+  for _, s in ipairs(SYSTEMS) do
+    if s.inNew then newCount = newCount + #(catalogue[s.dir] or {}) end
+  end
+  if newCount > 0 then
+    menu[#menu + 1] = { label = "NEW ARCADE", short = "NEW", tag = gameCount(newCount) .. "  3D AND GUN GAMES",
                         color = { 0.85, 0.25, 0.55 }, picked = "newarcade", pic = "newarcade" }
   end
-  -- FACE TO FACE: head-to-head games set up for the table (see faceGames)
+  -- 2P VERSUS: head-to-head games set up for the table (see faceGames)
   if #faceGames() > 0 then
-    menu[#menu + 1] = { label = "FACE TO FACE", short = "VERSUS", tag = gameCount(#faceGames()),
+    menu[#menu + 1] = { label = "2P VERSUS", short = "VERSUS", tag = gameCount(#faceGames()) .. "  BOTH PLAY AT ONCE",
                         color = { 0.9, 0.35, 0.24 }, picked = "face", pic = "facetoface" }
   end
   local cockCount = 0
@@ -555,8 +567,16 @@ local function buildSystems()
     end
   end
   if cockCount > 0 then
-    menu[#menu + 1] = { label = "TWO PLAYER", short = "2P", tag = gameCount(cockCount),
-                        color = { 0.10, 0.44, 0.34 }, picked = "cocktail", pic = "twoplayer" }
+    menu[#menu + 1] = { label = "2P TAKE TURNS", short = "TURNS", tag = gameCount(cockCount) .. "  SCREEN FLIPS",
+                        color = { 0.10, 0.44, 0.34 }, picked = "cocktail", pic = "taketurns" }
+  end
+  if #extras > 0 then
+    menu[#menu + 1] = { label = "EXTRAS", short = "EXTRAS", tag = gameCount(#extras) .. "  PONG AND FRIENDS",
+                        color = { 0.24, 0.50, 0.80 }, picked = "extras", pic = "extras" }
+  end
+  -- any other machine with games in its folder (none of them do yet)
+  for _, s in ipairs(SYSTEMS) do
+    if s.dir ~= "arcade" and not s.inNew then machine(s) end
   end
 
   local stars, plays = countPicked()
@@ -568,14 +588,8 @@ local function buildSystems()
     menu[#menu + 1] = { label = "PLAYED LATELY", short = "AGAIN", tag = gameCount(plays),
                         color = { 0.16, 0.44, 0.40 }, picked = "recent", pic = "recent" }
   end
-  local testCount = 0
-  for key in pairs(allGames()) do if totest[key] then testCount = testCount + 1 end end
-  if testCount > 0 then
-    menu[#menu + 1] = { label = "TO TEST AT THE TABLE", short = "TEST", tag = gameCount(testCount),
-                        color = { 0.50, 0.20, 0.44 }, picked = "totest", pic = "twoplayer" }
-  end
   -- everything that is not a game lives behind one box, at the very end, so the shelf
-  -- itself is games and nothing else
+  -- itself is games and nothing else (the to-test list is in there too)
   menu[#menu + 1] = { label = "SETTING UP", short = "SETUP", tag = "BUTTONS, SCREEN, SEARCH",
                       color = { 0.28, 0.26, 0.18 }, tools = true, pic = "settings" }
   menu[#menu + 1] = { label = "TURN OFF", short = "OFF", tag = "SHUT THE TABLE DOWN",
@@ -728,6 +742,12 @@ function buildTools()
   menu[#menu + 1] = { label = "LINE UP THE PICTURE", short = "SCREEN", tag = "IF THE EDGES ARE CUT OFF",
                       color = { 0.22, 0.30, 0.36 }, pic = "screen",
                       run = "love " .. shellQuote(HOME .. "/cabalign.love") }
+  local testCount = 0
+  for key in pairs(allGames()) do if totest[key] then testCount = testCount + 1 end end
+  if testCount > 0 then
+    menu[#menu + 1] = { label = "TO TEST AT THE TABLE", short = "TEST", tag = gameCount(testCount),
+                        color = { 0.50, 0.20, 0.44 }, picked = "totest", pic = "totest" }
+  end
   sub = "BUTTON 2 GOES BACK"
   state = "games"
   groupOf = nil
@@ -742,13 +762,32 @@ function buildPicked(which)
     menu, cursor = {}, 1
     title = "NEW ARCADE"
     for _, item in ipairs(newArcade) do menu[#menu + 1] = item end
+    for _, s in ipairs(SYSTEMS) do
+      if s.inNew then
+        for _, game in ipairs(catalogue[s.dir] or {}) do
+          local entry = gameEntry(game, s)
+          -- "CRAZY TAXI 2 (USA)": the region in brackets is noise on the box
+          entry.label = entry.label:gsub("%s*%b()", "")
+          entry.tag = s.name
+          menu[#menu + 1] = entry
+        end
+      end
+    end
+    sub = gameCount(#menu)
+    state, groupOf, scroll = "games", nil, cursor
+    return
+  end
+  if which == "extras" then
+    menu, cursor = {}, 1
+    title = "EXTRAS"
+    for _, item in ipairs(extras) do menu[#menu + 1] = item end
     sub = gameCount(#menu)
     state, groupOf, scroll = "games", nil, cursor
     return
   end
   if which == "face" then
     menu, cursor = {}, 1
-    title = "FACE TO FACE"
+    title = "2P VERSUS"
     for _, item in ipairs(faceGames()) do menu[#menu + 1] = item end
     sub = gameCount(#menu)
     state, groupOf, scroll = "games", nil, cursor
@@ -756,7 +795,7 @@ function buildPicked(which)
   end
   title = (which == "star") and "FAVOURITES"
        or (which == "together") and "TWO PLAYER"
-       or (which == "cocktail") and "TWO PLAYER"
+       or (which == "cocktail") and "2P TAKE TURNS"
        or (which == "totest") and "TO TEST AT THE TABLE"
        or "PLAYED LATELY"
   local keys = {}

@@ -1,7 +1,7 @@
 -- What lives in each folder under roms/, which core plays it, and the colour of its box.
 -- Add a line here and drop files in the matching folder; the menu picks it up.
 return {
-  { dir = "arcade",    name = "ARCADE",           short = "ARCADE", core = "fbneo",             ext = "zip 7z",                  color = { 0.80, 0.11, 0.18 } },
+  { dir = "arcade",    name = "RETRO ARCADE",     short = "ARCADE", core = "fbneo",             ext = "zip 7z",                  color = { 0.80, 0.11, 0.18 } },
   -- (MAME: not a shelf. Its few games - the gun games - are in the menu's NEW ARCADE box.)
   { dir = "nes",       name = "NINTENDO",         short = "NES",    core = "nestopia",          ext = "nes unf unif zip",        color = { 0.55, 0.13, 0.14 } },
   { dir = "snes",      name = "SUPER NINTENDO",   short = "SNES",   core = "snes9x",            ext = "sfc smc fig swc zip",     color = { 0.35, 0.28, 0.60 } },
@@ -21,6 +21,7 @@ return {
   { dir = "vb",        name = "VIRTUAL BOY",      short = "VB",     core = "mednafen_vb",       ext = "vb zip",                  color = { 0.58, 0.08, 0.10 } },
   { dir = "wonderswan",name = "WONDERSWAN",       short = "WS",     core = "mednafen_wswan",    ext = "ws wsc zip",              color = { 0.30, 0.30, 0.36 } },
   { dir = "o2em",      name = "ODYSSEY 2",        short = "O2",     core = "o2em",              ext = "bin zip",                 color = { 0.40, 0.18, 0.40 } },
-  { dir = "dreamcast", name = "DREAMCAST",        short = "DC",     core = "flycast",           ext = "gdi cdi chd m3u",         color = { 0.72, 0.42, 0.10 } },
+  -- inNew: no box of its own on the main shelf; its games are listed in NEW ARCADE
+  { dir = "dreamcast", name = "DREAMCAST",        short = "DC",     core = "flycast",           ext = "gdi cdi chd m3u",         color = { 0.72, 0.42, 0.10 }, inNew = true },
   { dir = "love",      name = "LOVE GAMES",       short = "LOVE",   core = nil,                 ext = "love",                    color = { 0.75, 0.20, 0.42 } },
 }
