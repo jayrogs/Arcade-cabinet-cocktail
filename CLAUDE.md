@@ -130,7 +130,7 @@ lives where on it. Read both first.
   Crazy Taxi 1 clear.** Measured by recording the output (`pw-record -P stream.capture.sink=true`;
   the sink monitor is after the volume, and "180%" is really x5.8, +15 dB): no dropouts in any of
   them, but CT2 had 48% and HOTD2 58% of their energy below 150 Hz (CT1 15%), which the small
-  speakers can't play. Now `flycast.cfg` (copy: `table/flycast.cfg`) runs every Flycast game
+  speakers can't play. Now `flycast.cfg` (copy: `flycast.cfg` in the repo root) runs every Flycast game
   through `filters/cab/CabClear.dsp` (`table/CabClear.dsp`: a 120 Hz high-pass; iir.so copied
   beside it) at -3 dB (CT1 clipped a little at 0); Dreamcast is -8 dB
   (`config/Flycast/dreamcast.cfg`, a content-dir override; it clipped 2% at 0), HOTD2 -1 dB
