@@ -126,10 +126,17 @@ lives where on it. Read both first.
   Crazy Taxi 2 (converted .cue/.bin -> .chd with chdman, now installed) has its controls in
   `config/Flycast/Crazy Taxi 2 (USA).cfg` (copy in `table/`): stick steers, 1 gas, 2 brake,
   3 = A (menus / hop), 4 = B. Tested driving at full speed. Phone page uploads Dreamcast games.
-  **Dreamcast sound is 5 dB down** (`table/dreamcast.cfg` -> `config/Flycast/dreamcast.cfg`, a content-dir
-  override for every game in roms/dreamcast): Crazy Taxi 2 mixes so loud that with the 180% boost it
-  clipped on 1.5% of samples (sounded awful). Checked by recording the output (`pw-record
-  -P stream.capture.sink=true`): 0 clipped at -5 dB, and no dropouts or splices either.
+- **Flycast sound (Sept 30), after Jay said Crazy Taxi 2 and House of the Dead 2 sounded bad and
+  Crazy Taxi 1 clear.** Measured by recording the output (`pw-record -P stream.capture.sink=true`;
+  the sink monitor is after the volume, and "180%" is really x5.8, +15 dB): no dropouts in any of
+  them, but CT2 had 48% and HOTD2 58% of their energy below 150 Hz (CT1 15%), which the small
+  speakers can't play. Now `flycast.cfg` (copy: `table/flycast.cfg`) runs every Flycast game
+  through `filters/cab/CabClear.dsp` (`table/CabClear.dsp`: a 120 Hz high-pass; iir.so copied
+  beside it) at -3 dB (CT1 clipped a little at 0); Dreamcast is -8 dB
+  (`config/Flycast/dreamcast.cfg`, a content-dir override; it clipped 2% at 0), HOTD2 -1 dB
+  (hotd2.cfg). Re-recorded: no clipping, peaks 2-4 dB under the limit, CT1 and CT2 equally loud
+  in the mids. Jay may swap the adapter for an Apple USB-C one; if the buzz goes, the 180% boost
+  can come down and these cuts with it.
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.
