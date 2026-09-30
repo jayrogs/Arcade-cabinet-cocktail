@@ -104,7 +104,9 @@ def panels():
         try:
             d = evdev.InputDevice(path)
             keys = d.capabilities().get(e.EV_KEY, [])
-            if any(s in keys for s in sides_on(d)):
+            # not the gun games' pretend controller (tools/gunstick.py): it repeats player
+            # 1's buttons, and its tenth is the coin, which restarted the game on every coin
+            if d.name != "Cab Gun Stick" and any(s in keys for s in sides_on(d)):
                 found.append(d)
             else:
                 d.close()

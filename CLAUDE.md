@@ -83,8 +83,18 @@ lives where on it. Read both first.
   is in `~/table_cfg/carnevil_nvram/` - if shots stop landing, copy it back to
   `saves/MAME/mame/nvram/carnevil/`. To recalibrate: start it with RetroArch's F2 save-state
   hotkey off, F2 = service, `=`/`-` move, F2 select, then GUN CALIBRATION.
-- **House of the Dead 2** is in `roms/naomi/hotd2.zip` but needs `hod2bios.zip` (its own BIOS),
-  not yet supplied. NAOMI light guns go through Flycast, so its aiming still has to be set up.
+- **House of the Dead 2** (Sept 30): `roms/naomi/hotd2.zip` + `hod2bios.zip` (also copied to
+  `system/dc/`), in MODERN ARCADE and FAVES, started by `~/hotd2.sh` (tools/). Flycast aims its gun
+  from an *analog* stick, absolutely (stick position = screen position), so with the on/off sticks
+  the crosshair could only sit in the middle or at an edge. `tools/gunstick.py` makes a pretend
+  controller "Cab Gun Stick" whose analog stick is the crosshair: holding the real stick glides it
+  (slow at first, then fast), player 1's buttons pass through. It writes its RetroArch controller
+  number to `/tmp/gunstick_pad.cfg`, which hotd2.sh appends. Autoconfig: `table/Cab Gun Stick.cfg`;
+  `table/hotd2.cfg` binds button 2 to reload; `table/hotd2.opt` (config/Flycast/) turns the crosshair
+  on at 200%. cabside.py ignores the pretend controller (its coin button looked like a phone pad's
+  side button and restarted the game). Tested with a fake panel: shots land on the crosshair,
+  reload works. A mouse-driven gun (RETRO_DEVICE_LIGHTGUN) never got coordinates here: dead end.
+  The phone page's arcade upload is where Jay put hod2bios.zip; it was moved to roms/naomi.
 - **Phone page uploads** take up to 16 GB (2 GB must stay free); it's at http://192.168.1.50:8080.
 - **Overclocked to 2.8 GHz** (`arm_freq=2800` in `[pi5]` of config.txt, Sept 28; backup
   config.txt.bak-oc). Needed the supply raised: ~5.25V idle at the Pi, 4.99V under full load, no

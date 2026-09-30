@@ -529,6 +529,17 @@ local function buildSystems()
       run = "sh " .. shellQuote(HOME .. "/mamegun.sh") .. " hotdo",   -- restores its crosshairs
     }
   end
+  -- The House of the Dead 2 (NAOMI, 1998), in Flycast. tools/hotd2.sh runs gunstick.py beside
+  -- it, a pretend analog controller that turns the on/off stick into a gliding crosshair;
+  -- button 1 fires, button 2 reloads. Needs naomi/hod2bios.zip as well.
+  local hotd2 = ROOT .. "/naomi/hotd2.zip"
+  if fileExists(hotd2) and fileExists(ROOT .. "/naomi/hod2bios.zip") then
+    newArcade[#newArcade + 1] = {
+      label = "THE HOUSE OF THE DEAD 2", short = "HOTD2", tag = "STICK AIMS  BUTTON 2 RELOADS",
+      color = { 0.5, 0.1, 0.1 }, pic = "hotd2", key = "modern/hotd2",
+      run = "sh " .. shellQuote(HOME .. "/hotd2.sh"),
+    }
+  end
   -- CarnEvil, Midway's 1998 light-gun game, in full MAME (full speed on the Pi 5): the same
   -- stick aiming as The House of the Dead (table/mame_default.cfg), crosshairs on in
   -- table/carnevil.cfg. Needs carnevil.zip with 486_carnevil.u96 and carnevil/carnevil.chd.
