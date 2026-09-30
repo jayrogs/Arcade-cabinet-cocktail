@@ -176,9 +176,11 @@ local function writeState()
   f:close()
 end
 
-local function notePlayed(game)
-  if not game then return end
-  local key = gameKey(game)
+local function notePlayed(item)
+  -- a folder game is known by its folder and file; the boxes with their own launcher
+  -- (Dr Mario, Crazy Taxi, the versus games...) carry a key of their own
+  local key = item.key or (item.game and gameKey(item.game))
+  if not key then return end
   for i, k in ipairs(recent) do
     if k == key then table.remove(recent, i) break end
   end
@@ -425,10 +427,22 @@ local function allGames()
   return byKey
 end
 
+-- the boxes with a launcher of their own, by key (see notePlayed): the extras, the modern
+-- arcade games and the versus games
+local function specials()
+  local byKey = {}
+  for _, list in ipairs({ extras, newArcade, faceGames() }) do
+    for _, item in ipairs(list) do
+      if item.key then byKey[item.key] = item end
+    end
+  end
+  return byKey
+end
+
 local function countPicked()
-  local byKey, stars, plays = allGames(), 0, 0
-  for key in pairs(favourites) do if byKey[key] then stars = stars + 1 end end
-  for _, key in ipairs(recent) do if byKey[key] then plays = plays + 1 end end
+  local byKey, special, stars, plays = allGames(), specials(), 0, 0
+  for key in pairs(favourites) do if byKey[key] or special[key] then stars = stars + 1 end end
+  for _, key in ipairs(recent) do if byKey[key] or special[key] then plays = plays + 1 end end
   return stars, plays
 end
 
@@ -447,34 +461,29 @@ local function buildSystems()
       }
     end
   end
-  -- the starred games lead: they are what gets played most, so the shelf opens on them
-  local stars, plays = countPicked()
-  if stars > 0 then
-    menu[#menu + 1] = { label = "FAVES", short = "FAVES", tag = gameCount(stars),
-                        color = { 0.72, 0.52, 0.06 }, picked = "star", pic = "favourites" }
-  end
-  -- then the arcade, the main thing this cabinet is for
+  -- the arcade, the main thing this cabinet is for (FAVES goes in ahead of it further down,
+  -- once the other boxes are filled in and their starred games can be counted)
   for _, s in ipairs(SYSTEMS) do if s.dir == "arcade" then machine(s) end end
   extras = {}
   local drc = HOME .. "/drcocktail.love"
   if fileExists(drc) then
     extras[#extras + 1] = {
       label = "DR. MARIO COCKTAIL EDITION", short = "DR MARIO", tag = "2 PLAYER",
-      color = { 0.10, 0.34, 0.68 }, run = "love " .. shellQuote(drc), pic = "drmario",
+      color = { 0.10, 0.34, 0.68 }, run = "love " .. shellQuote(drc), pic = "drmario", key = "extra/drmario",
     }
   end
   local pong = HOME .. "/pong.love"
   if fileExists(pong) then
     extras[#extras + 1] = {
       label = "PONG", short = "PONG", tag = "1 OR 2 PLAYERS",
-      color = { 0.12, 0.30, 0.40 }, run = "love " .. shellQuote(pong), pic = "pong",
+      color = { 0.12, 0.30, 0.40 }, run = "love " .. shellQuote(pong), pic = "pong", key = "extra/pong",
     }
   end
   local flap = HOME .. "/flap.love"
   if fileExists(flap) then
     extras[#extras + 1] = {
       label = "FLAPPY BIRD", short = "FLAPPY", tag = "1 OR 2 PLAYERS",
-      color = { 0.24, 0.62, 0.88 }, run = "love " .. shellQuote(flap), pic = "flap",
+      color = { 0.24, 0.62, 0.88 }, run = "love " .. shellQuote(flap), pic = "flap", key = "extra/flappy",
     }
   end
   -- the real Crossy Road arcade software, run through box86 and wine
@@ -482,7 +491,7 @@ local function buildSystems()
   if fileExists(crossy) then
     extras[#extras + 1] = {
       label = "CROSSY ROAD", short = "CROSSY", tag = "2 PLAYERS   THE REAL ONE",
-      color = { 0.24, 0.62, 0.90 }, run = "sh " .. shellQuote(crossy), pic = "crossy",
+      color = { 0.24, 0.62, 0.90 }, run = "sh " .. shellQuote(crossy), pic = "crossy", key = "extra/crossy",
     }
   end
   -- NEW ARCADE: the 3D-era arcade games (NAOMI and the heavy MAME boards), each with its own
@@ -493,7 +502,7 @@ local function buildSystems()
   if fileExists(monkey) then
     newArcade[#newArcade + 1] = {
       label = "MONKEY BALL", short = "MONKEY", tag = "SEGA ARCADE 2001",
-      color = { 0.93, 0.55, 0.12 }, pic = "monkeyball",
+      color = { 0.93, 0.55, 0.12 }, pic = "monkeyball", key = "modern/monkeyba",
       -- tools/monkeyball.sh: Flycast for OpenGL ES, threaded rendering, and a retry when a
       -- start locks up
       run = "sh " .. shellQuote(HOME .. "/monkeyball.sh"),
@@ -504,7 +513,7 @@ local function buildSystems()
   if fileExists(sgt) then
     newArcade[#newArcade + 1] = {
       label = "SEGA TETRIS", short = "TETRIS", tag = "SEGA ARCADE 1999",
-      color = { 0.2, 0.45, 0.9 }, pic = "sgtetris",
+      color = { 0.2, 0.45, 0.9 }, pic = "sgtetris", key = "modern/sgtetris",
       run = "sh " .. shellQuote(HOME .. "/naomi.sh") .. " sgtetris",
     }
   end
@@ -516,7 +525,7 @@ local function buildSystems()
   if fileExists(hotd) then
     newArcade[#newArcade + 1] = {
       label = "THE HOUSE OF THE DEAD", short = "HOTD", tag = "STICK AIMS  EDGE RELOADS",
-      color = { 0.55, 0.08, 0.08 }, pic = "hotd",
+      color = { 0.55, 0.08, 0.08 }, pic = "hotd", key = "modern/hotdo",
       run = "sh " .. shellQuote(HOME .. "/mamegun.sh") .. " hotdo",   -- restores its crosshairs
     }
   end
@@ -527,7 +536,7 @@ local function buildSystems()
   if fileExists(carn) then
     newArcade[#newArcade + 1] = {
       label = "CARNEVIL", short = "CARNEV", tag = "STICK AIMS  EDGE RELOADS",
-      color = { 0.45, 0.1, 0.4 }, pic = "carnevil",
+      color = { 0.45, 0.1, 0.4 }, pic = "carnevil", key = "modern/carnevil",
       run = "sh " .. shellQuote(HOME .. "/mamegun.sh") .. " carnevil",   -- restores its crosshairs
     }
   end
@@ -536,7 +545,7 @@ local function buildSystems()
   if fileExists(taxi) then
     newArcade[#newArcade + 1] = {
       label = "CRAZY TAXI", short = "TAXI", tag = "SEGA ARCADE 1999",
-      color = { 0.95, 0.78, 0.10 }, pic = "crazytaxi",
+      color = { 0.95, 0.78, 0.10 }, pic = "crazytaxi", key = "modern/crzytaxi",
       -- tools/crazytaxi.sh: stick steers, button 1 gas, button 2 brake, up/down the gears
       run = "sh " .. shellQuote(HOME .. "/crazytaxi.sh"),
     }
@@ -547,7 +556,7 @@ local function buildSystems()
   if fileExists(a51) then
     newArcade[#newArcade + 1] = {
       label = "AREA 51", short = "AREA51", tag = "STICK AIMS  EDGE RELOADS",
-      color = { 0.2, 0.5, 0.25 }, pic = "area51",
+      color = { 0.2, 0.5, 0.25 }, pic = "area51", key = "modern/area51",
       run = "sh " .. shellQuote(HOME .. "/mamegun.sh") .. " area51",
     }
   end
@@ -585,6 +594,12 @@ local function buildSystems()
     if s.dir ~= "arcade" and not s.inNew then machine(s) end
   end
 
+  local stars, plays = countPicked()
+  -- the starred games lead: they are what gets played most, so the shelf opens on them
+  if stars > 0 then
+    table.insert(menu, 1, { label = "FAVES", short = "FAVES", tag = gameCount(stars),
+                            color = { 0.72, 0.52, 0.06 }, picked = "star", pic = "favourites" })
+  end
   if plays > 0 then
     menu[#menu + 1] = { label = "PLAYED LATELY", short = "AGAIN", tag = gameCount(plays),
                         color = { 0.16, 0.44, 0.40 }, picked = "recent", pic = "recent" }
@@ -651,7 +666,7 @@ function faceGames()
         tag = (f[3] == "court") and "THE COURT RUNS ALONG THE TABLE"
            or (f[3] == "arena") and "BUTTON 1 FWD 4 BACK 2 LEFT 3 RIGHT"
            or "EACH HALF FACES ITS PLAYER",
-        color = { 0.9, 0.35, 0.24 }, pic = "face_" .. stem, run = run,
+        color = { 0.9, 0.35, 0.24 }, pic = "face_" .. stem, run = run, key = "versus/" .. stem,
       }
     end
   end
@@ -802,7 +817,12 @@ function buildPicked(which)
   local keys = {}
   if which == "star" then
     for key in pairs(favourites) do keys[#keys + 1] = key end
-    table.sort(keys)
+    -- by name, whichever box the game lives in
+    local special = specials()
+    local function name(k)
+      return (byKey[k] and byKey[k].game.label) or (special[k] and special[k].label) or k
+    end
+    table.sort(keys, function(a, b) return name(a) < name(b) end)
   elseif which == "together" or which == "cocktail" or which == "totest" then
     local from = (which == "cocktail") and cocktail or (which == "totest") and totest or together
     for key in pairs(byKey) do
@@ -814,9 +834,11 @@ function buildPicked(which)
   else
     keys = recent
   end
+  local special = specials()
   for _, key in ipairs(keys) do
     local hit = byKey[key]
-    if hit then menu[#menu + 1] = gameEntry(hit.game, hit.sys) end
+    if hit then menu[#menu + 1] = gameEntry(hit.game, hit.sys)
+    elseif special[key] then menu[#menu + 1] = special[key] end
   end
   sub = gameCount(#menu)
   if #menu == 0 then
@@ -895,7 +917,7 @@ local function choose()
   elseif item.sys then
     buildGames(item.sys)
   elseif item.run then
-    notePlayed(item.game)
+    notePlayed(item)
     launch(item.run, item.run2)
   end
 end
@@ -908,8 +930,9 @@ end
 -- button 3 stars a game, or takes the star off
 local function toggleStar()
   local item = menu[cursor]
-  if not item or not item.game then return end
-  local key = gameKey(item.game)
+  if not item then return end
+  local key = item.key or (item.game and gameKey(item.game))
+  if not key then return end
   favourites[key] = (not favourites[key]) or nil
   writeState()
   sound(thunk)
@@ -1222,7 +1245,7 @@ local function drawBox(item, cx, cy, scale, focus)
     g.print("2P", math.floor(x + 11), math.floor(y + h - 12 * scale + 1))
   end
 
-  if item.game and favourites[gameKey(item.game)] then
+  if favourites[item.key or (item.game and gameKey(item.game)) or ""] then
     g.setColor(1, 0.82, 0.1)
     local sx, sy, r = x + w - 10, y + 12, 7 * scale
     for i = 0, 4 do

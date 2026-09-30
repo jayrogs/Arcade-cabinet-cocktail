@@ -96,6 +96,13 @@ lives where on it. Read both first.
   in main.lua), any other machine with games, PLAYED LATELY, SETTING UP (the to-test
   list is now inside it), TURN OFF. Deploy: swap main.lua / systems.lua inside `~/cabmenu.love`
   (a zip) and kill the menu's `love`; cab.sh restarts it. Box pictures: `tools/menuart.py` CARDS.
+- **Any game can be starred (Sept 30):** boxes with their own launcher carry a `key`
+  (`extra/drmario`, `modern/crzytaxi`, `versus/atetris`...; `specials()` in main.lua), stored in
+  `~/cab_state.txt` beside the folder games' `arcade/<name>` keys; PLAYED LATELY uses them too.
+  Jay's FAVES list, set by hand that day: Dr Mario, the versus Tetrises (Tetris, Sega Tetris,
+  TGM2 Plus, Tetris Plus 2), versus Puzzle Bobble 2, the three sped-up Pac-Mans, Crazy Taxi,
+  CarnEvil, House of the Dead 1 (he asked for 2: add it once hod2bios.zip arrives and it works).
+  The old stars (Claude's picks, which annoyed him) are in `~/cab_state.txt.bak-faves`.
 - **Menu (Sept 28):** no MAME shelf any more (systems.lua); the 3D-era arcade games (Crazy Taxi,
   Monkey Ball, Sega Tetris, House of the Dead, CarnEvil, Area 51) are in a **NEW ARCADE** box
   (`newArcade` in main.lua). Area 51 (`roms/mame/area51.zip` + `area51/*.chd`) runs ~90% speed via
