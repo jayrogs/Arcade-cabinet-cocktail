@@ -316,7 +316,7 @@ def drmario_card():
 
 
 CARDS = [
-    ("newarcade", "NEW", (217, 64, 140), "cabinet"),   # the NEW ARCADE box
+    ("newarcade", "MODERN", (217, 64, 140), "cabinet"),   # the NEW ARCADE box
     ("facetoface", "VERSUS", (230, 90, 60), "table"),   # the FACE TO FACE shelf
     ("twoplayer",  "2P",       (26, 112, 87),  "table"),
     ("taketurns",  "TURNS",    (26, 112, 87),  "table"),   # the 2P TAKE TURNS box

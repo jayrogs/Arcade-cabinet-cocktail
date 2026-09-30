@@ -552,7 +552,7 @@ local function buildSystems()
     if s.inNew then newCount = newCount + #(catalogue[s.dir] or {}) end
   end
   if newCount > 0 then
-    menu[#menu + 1] = { label = "NEW ARCADE", short = "NEW", tag = gameCount(newCount) .. "  3D AND GUN GAMES",
+    menu[#menu + 1] = { label = "MODERN ARCADE", short = "MODERN", tag = gameCount(newCount) .. "  3D AND GUN GAMES",
                         color = { 0.85, 0.25, 0.55 }, picked = "newarcade", pic = "newarcade" }
   end
   -- 2P VERSUS: head-to-head games set up for the table (see faceGames)
@@ -760,7 +760,7 @@ function buildPicked(which)
   -- the header has the count beside it, so the long name stays on the box
   if which == "newarcade" then
     menu, cursor = {}, 1
-    title = "NEW ARCADE"
+    title = "MODERN ARCADE"
     for _, item in ipairs(newArcade) do menu[#menu + 1] = item end
     for _, s in ipairs(SYSTEMS) do
       if s.inNew then

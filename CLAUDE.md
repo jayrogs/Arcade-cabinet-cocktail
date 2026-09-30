@@ -90,7 +90,7 @@ lives where on it. Read both first.
   config.txt.bak-oc). Needed the supply raised: ~5.25V idle at the Pi, 4.99V under full load, no
   undervoltage. At 5.05V idle it dipped to 4.68V and throttled. Stress-tested at 70°C max.
 - **Main shelf reorganised (Sept 30)**, 14 boxes -> 9, in this order: RETRO ARCADE (the arcade
-  folder), NEW ARCADE (its own launchers + every game of a machine marked `inNew` in systems.lua,
+  folder), MODERN ARCADE (was NEW ARCADE; `newArcade` in the code; its own launchers + every game of a machine marked `inNew` in systems.lua,
   i.e. Dreamcast, which has no box of its own), 2P VERSUS (was FACE TO FACE), 2P TAKE TURNS (was
   TWO PLAYER: the cocktail-flip list), EXTRAS (Dr Mario, Pong, Flappy Bird, Crossy Road; `extras`
   in main.lua), any other machine with games, FAVOURITES, PLAYED LATELY, SETTING UP (the to-test
