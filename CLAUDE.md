@@ -135,8 +135,13 @@ lives where on it. Read both first.
   beside it) at -3 dB (CT1 clipped a little at 0); Dreamcast is -8 dB
   (`config/Flycast/dreamcast.cfg`, a content-dir override; it clipped 2% at 0), HOTD2 -1 dB
   (hotd2.cfg). Re-recorded: no clipping, peaks 2-4 dB under the limit, CT1 and CT2 equally loud
-  in the mids. Jay may swap the adapter for an Apple USB-C one; if the buzz goes, the 180% boost
-  can come down and these cuts with it.
+  in the mids.
+- **Sound adapter is now Apple's USB-C to 3.5 mm (Oct 1).** WirePlumber keeps volume per device, so
+  it came up at 40% (its hardware volume -23.5 dB) and sounded quiet; set to 100% (hardware 0 dB,
+  no software boost; saved in ~/.local/state/wireplumber). Jay: very clean, static barely
+  noticeable. Do NOT boost it past 100%. The Flycast cuts above were re-recorded on it: peaks -0.6
+  (CT1), -3.4 (CT2), -4.5 dBFS (HOTD2), no clipping. Raising them (tried +9/+6/+12) clipped hard.
+  The "x5.8 boost" reading earlier was wrong about where pw-record listens: trust fresh recordings.
 - **Fan:** official Pi 5 Active Cooler fitted and tested (off below 50°C, spins up above).
 - **Backup:** `Documents\CabBackup` on Jay's PC, made by `tools/cab_backup.py` hourly
   when the cabinet is on.
